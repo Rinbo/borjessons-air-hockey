@@ -1,16 +1,27 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
-import Start from "./views/start/start";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import ReactDOM from "react-dom/client";
+import GamesLayout from "./routes/games/layout";
 
 import "./css/index.css";
-import ErrorPage from "./views/error/error-page";
+import ErrorPage from "./routes/error/error-page";
+import ShowGame from "./routes/games/show-game";
+import LandingPage from "./routes/landing/landing-page";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Start />,
+    element: <LandingPage />,
     errorElement: <ErrorPage />,
+  },
+  {
+    path: "/games",
+    element: <GamesLayout />,
+    children: [
+      { index: true, element: <div>Currently running games</div> },
+      { path: "new", element: <div>Create Game</div> },
+      { path: ":id", element: <ShowGame /> },
+    ],
   },
 ]);
 
