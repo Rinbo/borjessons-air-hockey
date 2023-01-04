@@ -1,16 +1,16 @@
 import React from "react";
 import Button from "./button";
 
-export default function () {
+export default function PlayButton() {
   return (
     <Button text="Create Game">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        viewBox="5 0 24 24"
+        viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        className="w-6 h-6"
+        className="w-6 h-6 mr-2"
       >
         <path
           strokeLinecap="round"
