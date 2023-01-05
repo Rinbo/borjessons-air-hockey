@@ -3,7 +3,7 @@
   padding: 0px;
 }
 
-.circles {
+.puck {
   position: absolute;
   top: 0;
   left: 0;
@@ -12,25 +12,35 @@
   overflow: hidden;
 }
 
-.circles li {
+.puck li {
   position: absolute;
   display: block;
   list-style: none;
   width: 20px;
   height: 20px;
   background: rgba(0, 0, 0, 0.5);
-  animation: animate 8s linear infinite alternate;
+  animation: puck-animation 8s linear infinite alternate;
   bottom: 0px;
   border-radius: 100%;
 }
 
-.circles li:nth-child(1) {
+.puck li:nth-child(1) {
   left: 40%;
   width: 20vw;
   height: 20vw;
 }
 
 @keyframes animate {
+  0% {
+    transform: translateY(300vh) rotate(0deg);
+  }
+
+  100% {
+    transform: translateY(-300vh) rotate(720deg);
+  }
+}
+
+@keyframes puck-animation {
   0% {
     transform: translateY(300vh) rotate(0deg);
   }

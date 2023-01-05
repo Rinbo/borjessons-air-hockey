@@ -15,7 +15,7 @@ export default function LandingPage() {
           <JoinButton />
           <OnlineButton />
         </div>
-        <ul className="circles">
+        <ul className="puck">
           <li></li>
         </ul>
       </div>
