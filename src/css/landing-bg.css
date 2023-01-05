@@ -31,21 +31,17 @@
 }
 
 .ripple {
-  animation: ripples 0.4s linear;
+  animation: ripples 2s ease-out;
   animation-delay: 0.2s;
 }
 
 @keyframes ripples {
   10% {
-    transform: skew(15deg, 15deg);
-    /* transform: translateY(25px) scale(1.5); */
-    color: #99f6e4;
+    transform: scale(1.2) translateY(10px);
   }
 
   75% {
-    transform: skew(-15deg, -15deg);
-    /* transform: translateY(25px) scale(1.5); */
-    color: #99f6e4;
+    transform: scale(1.2) translateY(10px);
   }
 }
 

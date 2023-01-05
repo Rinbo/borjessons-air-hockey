@@ -15,6 +15,10 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
+    path: "/online",
+    element: <h1 className="text-3xl text-center pt-16">Online Users</h1>,
+  },
+  {
     path: "/games",
     element: <GamesLayout />,
     children: [
@@ -27,6 +31,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <div className="text-primary bg-bg h-screen w-screen">
+      <RouterProvider router={router} />
+    </div>
   </React.StrictMode>
 );
