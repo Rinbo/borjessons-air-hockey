@@ -2,11 +2,11 @@ import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ReactDOM from "react-dom/client";
 import GamesLayout from "./routes/games/layout";
-
-import "./css/index.css";
 import ErrorPage from "./routes/error/error-page";
 import ShowGame from "./routes/games/show-game";
 import LandingPage from "./routes/landing/landing-page";
+import ChooseAName from "./routes/choose-a-name/choose-a-name";
+import "./css/index.css";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +17,10 @@ const router = createBrowserRouter([
   {
     path: "/online",
     element: <h1 className="text-3xl text-center pt-16">Online Users</h1>,
+  },
+  {
+    path: "/choose-a-name",
+    element: <ChooseAName />,
   },
   {
     path: "/games",

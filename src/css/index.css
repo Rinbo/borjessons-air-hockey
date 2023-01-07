@@ -7,3 +7,15 @@
 body {
   font-family: "Exo", sans-serif;
 }
+
+.btn {
+  @apply font-bold py-2 px-4 rounded-lg;
+}
+
+.btn-primary {
+  @apply text-primary;
+}
+
+.btn-primary:hover {
+  @apply hover:bg-teal-200;
+}

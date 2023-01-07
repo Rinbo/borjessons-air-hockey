@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import Button from "../../components/buttons/button";
-import JoinButton from "../../components/buttons/join-button";
-import OnlineButton from "../../components/buttons/online-button";
+import IconButton from "../../components/buttons/icon-button";
 import playIcon from "../../assets/svg/play.svg";
 import shareIcon from "../../assets/svg/share.svg";
 import wifiIcon from "../../assets/svg/wifi.svg";
@@ -16,22 +14,32 @@ export default function LandingPage() {
       <div className="text-6xl text-center font-bold ripple">Air Hockey</div>
 
       <div className="flex flex-col grow items-center justify-center gap-2 ">
-        <Button
+        <IconButton
           text="Join Games"
+          className="w-64"
           svgIcon={shareIcon}
           onClick={() => navigate("/games")}
         />
-        <Button
+        <IconButton
           text="Create Game"
+          className="w-64"
           svgIcon={playIcon}
           onClick={() => navigate("/games/new")}
         />
-        <Button
+        <IconButton
           text="See who is online"
+          className="w-64"
           svgIcon={wifiIcon}
           onClick={() => navigate("/online")}
         />
       </div>
+      <br />
+      <button
+        className="fixed top-0 z-10"
+        onClick={() => localStorage.removeItem("name")}
+      >
+        Clear localStorage
+      </button>
 
       <ul className="puck">
         <li></li>
