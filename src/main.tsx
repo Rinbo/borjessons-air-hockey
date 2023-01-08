@@ -6,6 +6,7 @@ import ErrorPage from "./routes/error/error-page";
 import ShowGame from "./routes/games/show-game";
 import LandingPage from "./routes/landing/landing-page";
 import ChooseAName from "./routes/choose-a-name/choose-a-name";
+import GenerateRoom from "./routes/games/generate-room";
 import "./css/index.css";
 
 const router = createBrowserRouter([
@@ -27,7 +28,7 @@ const router = createBrowserRouter([
     element: <GamesLayout />,
     children: [
       { index: true, element: <div>Currently running games</div> },
-      { path: "new", element: <div>Create Game</div> },
+      { path: "new", element: <GenerateRoom /> },
       { path: ":id", element: <ShowGame /> },
     ],
   },

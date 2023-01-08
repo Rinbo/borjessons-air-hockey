@@ -6,7 +6,8 @@ export default function Banner() {
       className="text-sm text-center w-screen text-primary m-0 p-0 hover:bg-teal-200 absolute top-0"
       to="/"
     >
-      borjessons air hockey
+      <span className="font-mono font-bold">{`< `}</span>
+      <span>borjessons air hockey</span>
     </Link>
   );
 }
