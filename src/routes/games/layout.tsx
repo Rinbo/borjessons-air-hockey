@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import { Outlet, Navigate } from "react-router-dom";
 import Banner from "../../components/misc/banner";
@@ -18,10 +19,10 @@ export default function GamesLayout() {
   }
 
   return (
-    <div className="pt-5">
+    <React.Fragment>
       <Banner />
       {/*TODO pass saved name down to all outlet components*/}
       <Outlet />
-    </div>
+    </React.Fragment>
   );
 }

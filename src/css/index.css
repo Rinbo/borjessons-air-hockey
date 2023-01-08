@@ -16,6 +16,22 @@ body {
   @apply text-primary;
 }
 
+.btn-primary-outlined {
+  @apply text-primary border-2 border-primary;
+}
+
+.btn-orange-outlined {
+  @apply text-primary border-2 border-orange-500;
+}
+
 .btn-primary:hover {
   @apply hover:bg-teal-200;
+}
+
+.btn-primary-outlined:hover {
+  @apply hover:bg-teal-200;
+}
+
+.btn-orange-outlined:hover {
+  @apply hover:bg-orange-300 hover:border-orange-300;
 }

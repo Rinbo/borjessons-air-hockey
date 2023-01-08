@@ -17,8 +17,8 @@ export default function IconButton({
       onClick={onClick}
       className={`btn btn-primary z-10 inline-flex justify-center ${className}`}
     >
-      {svgIcon && <img src={svgIcon} className="w-6 h-6 mr-2" />}
-      <span>{text}</span>
+      {svgIcon && <img src={svgIcon} className="w-6 h-6" />}
+      <span className={text.length === 0 ? "" : "ml-2"}>{text}</span>
     </button>
   );
 }
