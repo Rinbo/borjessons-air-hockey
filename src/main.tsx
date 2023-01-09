@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ReactDOM from "react-dom/client";
 import GamesLayout from "./routes/games/layout";
 import ErrorPage from "./routes/error/error-page";
-import ShowGame from "./routes/games/show-game";
+import Lobby from "./routes/games/lobby";
 import LandingPage from "./routes/landing/landing-page";
 import ChooseAName from "./routes/choose-a-name/choose-a-name";
 import GenerateRoom from "./routes/games/generate-room";
@@ -29,7 +29,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <div>Currently running games</div> },
       { path: "new", element: <GenerateRoom /> },
-      { path: ":id", element: <ShowGame /> },
+      { path: ":id", element: <Lobby /> },
     ],
   },
 ]);

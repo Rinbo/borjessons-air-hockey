@@ -3,7 +3,9 @@ import IconButton from "../../components/buttons/icon-button";
 import shareIcon from "../../assets/svg/share.svg";
 import sendIcon from "../../assets/svg/send.svg";
 
-export default function ShowGame() {
+const CHAT = ["Waiting for opponent to join...", "Opponent joined..."];
+
+export default function Lobby() {
   const { id } = useParams<string>();
 
   return (
@@ -22,7 +24,11 @@ export default function ShowGame() {
             <button className="btn btn-orange-outlined w-20">Exit</button>
           </div>
         </div>
-        <div className="flex-1 bg-slate-100 border-2 border-primary border-opacity-50 rounded-md " />
+        <div className="flex-1 flex flex-col justify-end bg-slate-100 p-2 border-2 border-primary border-opacity-50 rounded-md ">
+          {CHAT.map((line) => (
+            <span>{line}</span>
+          ))}
+        </div>
         <input
           placeholder="Write something..."
           className="p-2 bg-slate-100 border-2 border-primary border-opacity-40 rounded"
