@@ -6,8 +6,6 @@ import Banner from "../../components/misc/banner";
 export default function GamesLayout() {
   const name = localStorage.getItem("name");
 
-  console.log(name, "NAME");
-
   if (!name) {
     return (
       <Navigate
@@ -21,8 +19,7 @@ export default function GamesLayout() {
   return (
     <React.Fragment>
       <Banner />
-      {/*TODO pass saved name down to all outlet components*/}
-      <Outlet />
+      <Outlet context={{ name }} />
     </React.Fragment>
   );
 }

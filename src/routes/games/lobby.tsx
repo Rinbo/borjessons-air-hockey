@@ -1,24 +1,36 @@
-import { useParams } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import IconButton from "../../components/buttons/icon-button";
 import shareIcon from "../../assets/svg/share.svg";
 import sendIcon from "../../assets/svg/send.svg";
 
+type OutletContext = { name: string };
 const CHAT = ["Waiting for opponent to join...", "Opponent joined..."];
 
 export default function Lobby() {
   const { id } = useParams<string>();
+  const { name } = useOutletContext<OutletContext>();
 
   return (
-    <div className="sm:container sm:max-w-3xl sm:mx-auto px-2 py-4 h-full border-2">
+    <div className="sm:container sm:max-w-3xl h-screen sm:mx-auto px-2 py-4">
       <div className="flex flex-col gap-2 h-full">
         <div className="text-center text-3xl py-4">Lobby</div>
         <div className="flex justify-between">
-          <button className="btn btn-primary-outlined">Ready</button>
+          <div className="flex items-center gap-2">
+            <button className="btn btn-primary-outlined">Ready</button>
+            <div className="inline-flex flex-col gap-2">
+              <span className="text-xs whitespace-nowrap overflow-hidden">
+                P1: {name}
+              </span>
+              <span className="text-xs whitespace-nowrap overflow-hidden">
+                P2:
+              </span>
+            </div>
+          </div>
           <div className="flex gap-2">
             <IconButton
               text=""
               onClick={() => console.log("share")}
-              className="border-2 border-primary"
+              className="border border-primary"
               svgIcon={shareIcon}
             />
             <button className="btn btn-orange-outlined w-20">Exit</button>
@@ -37,7 +49,7 @@ export default function Lobby() {
           <IconButton
             text=""
             onClick={() => console.log("Send")}
-            className="border-2 border-primary"
+            className="border border-primary"
             svgIcon={sendIcon}
           />
         </div>

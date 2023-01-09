@@ -7,8 +7,8 @@ import Banner from "../../components/misc/banner";
 const NameSchema = z.object({
   name: z
     .string()
-    .min(2, { message: "Too short" })
-    .max(15, { message: "Too long" }),
+    .min(2, { message: "Too short. Min 1 character" })
+    .max(12, { message: "Too long. Max 12 characters" }),
 });
 
 export default function ChooseAName() {

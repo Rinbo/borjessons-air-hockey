@@ -9,7 +9,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full h-full flex flex-col ">
+    <div className="w-full h-screen flex flex-col ">
       <div className="text-3xl text-center pt-20">borjessons</div>
       <div className="text-6xl text-center font-bold ripple">Air Hockey</div>
 
@@ -41,9 +41,9 @@ export default function LandingPage() {
         Clear localStorage
       </button>
 
-      <ul className="puck">
+      {/*  <ul className="puck">
         <li></li>
-      </ul>
+      </ul> */}
     </div>
   );
 }
