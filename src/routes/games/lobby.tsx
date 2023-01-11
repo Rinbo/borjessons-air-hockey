@@ -1,14 +1,37 @@
+import React from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import IconButton from "../../components/buttons/icon-button";
 import shareIcon from "../../assets/svg/share.svg";
 import sendIcon from "../../assets/svg/send.svg";
 
+type Message = { username: string; message: string; datetime: string };
 type OutletContext = { name: string };
 const CHAT = ["Waiting for opponent to join...", "Opponent joined..."];
+
+let stompClient: any;
 
 export default function Lobby() {
   const { id } = useParams<string>();
   const { name } = useOutletContext<OutletContext>();
+  const [messages, setMessages] = React.useState<Array<Message>>([]);
+
+  React.useEffect(() => {
+    if (!stompClient) connect();
+  }, []);
+
+  function connect() {
+    const Stomp = require("stompjs");
+    let SockJS = require("sockjs-client");
+
+    const socket = new SockJS("http://localhost:8080/air-hockey-server");
+    stompClient = Stomp.over(socket);
+    stompClient.connect({}, function (frame: string) {
+      console.log("Connected: " + frame);
+      stompClient.subscribe("/topic/public", function (message: Message) {
+        setMessages((prevState) => [...prevState, message]);
+      });
+    });
+  }
 
   return (
     <div className="sm:container sm:max-w-3xl h-screen sm:mx-auto px-2 py-4">
