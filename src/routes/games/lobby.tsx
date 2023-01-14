@@ -8,7 +8,6 @@ import Stomp from 'stompjs';
 
 type Message = { username: string; message: string; datetime: string };
 type OutletContext = { name: string };
-const CHAT = ['Waiting for opponent to join...', 'Opponent joined...'];
 
 export default function Lobby() {
   const { id } = useParams<string>();
@@ -33,7 +32,7 @@ export default function Lobby() {
   }, []);
 
   const sendMessage = () => {
-    stompClient && stompClient.send('/app/send-message', {}, JSON.stringify({ username: name, message: message, datetime: new Date().toDateString() }));
+    stompClient && stompClient.send('/app/send-message', {}, JSON.stringify({ username: name, message: message, datetime: new Date() }));
     setMessage('');
   };
 
@@ -57,15 +56,18 @@ export default function Lobby() {
         <div className="flex-1 flex flex-col justify-end bg-slate-100 p-2 border-2 border-primary border-opacity-50 rounded-md ">
           {messages.map((line, index) => (
             <div className="flex gap-2" key={index}>
-              <span>{line.username}:</span>
-              <span className="ml-2">{line.message}</span>
+              <span>{new Date(Number.parseInt(line.datetime) * 1000).toLocaleTimeString()}</span>
+              <span className="ml-1">{line.username}:</span>
+              <span className="ml-1">{line.message}</span>
             </div>
           ))}
         </div>
         <input
           placeholder="Write something..."
           className="p-2 bg-slate-100 border-2 border-primary border-opacity-40 rounded"
+          value={message}
           onChange={e => setMessage(e.target.value)}
+          onKeyDown={e => (e.key === 'Enter' ? sendMessage() : null)}
         />
         <div className="flex justify-end">
           <IconButton text="" onClick={sendMessage} className="border border-primary" svgIcon={sendIcon} />
