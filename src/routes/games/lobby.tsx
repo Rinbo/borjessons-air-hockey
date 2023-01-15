@@ -1,40 +1,21 @@
 import React from 'react';
-import { useOutletContext, useParams } from 'react-router-dom';
 import IconButton from '../../components/buttons/icon-button';
 import shareIcon from '../../assets/svg/share.svg';
 import sendIcon from '../../assets/svg/send.svg';
-import SockJS from 'sockjs-client/dist/sockjs';
-import Stomp from 'stompjs';
+import { Message } from './game-container';
 
-type Message = { username: string; message: string; datetime: string };
-type OutletContext = { name: string };
+type Props = {
+  sendMessage: (message: string) => void;
+  messages: Array<Message>;
+};
 
-export default function Lobby() {
-  const { id } = useParams<string>();
-  const { name } = useOutletContext<OutletContext>();
-  const [stompClient, setStompClient] = React.useState<Stomp.Client | null>();
-  const [messages, setMessages] = React.useState<Array<Message>>([]);
+export default function Lobby({ sendMessage, messages }: Props) {
   const [message, setMessage] = React.useState<string>('');
 
-  React.useEffect(() => {
-    const socket = new SockJS('http://localhost:8080/ws');
-    const stomp = Stomp.over(socket);
-
-    stomp.connect({}, frame => {
-      console.log('Connecting', frame);
-      setStompClient(stomp);
-      stomp.subscribe('/topic/public', (message: Stomp.Message) => {
-        setMessages(prev => [...prev, JSON.parse(message.body) as Message]);
-      });
-    });
-
-    return () => stomp.disconnect(() => console.log('disconnecting...'));
-  }, []);
-
-  const sendMessage = () => {
-    stompClient && stompClient.send('/app/send-message', {}, JSON.stringify({ username: name, message: message, datetime: new Date() }));
+  function handleSendMessage() {
+    sendMessage(message);
     setMessage('');
-  };
+  }
 
   return (
     <div className="sm:container sm:max-w-3xl h-screen sm:mx-auto px-2 py-4">
@@ -44,7 +25,7 @@ export default function Lobby() {
           <div className="flex items-center gap-2">
             <button className="btn btn-primary-outlined">Ready</button>
             <div className="inline-flex flex-col gap-2">
-              <span className="text-xs whitespace-nowrap overflow-hidden">P1: {name}</span>
+              <span className="text-xs whitespace-nowrap overflow-hidden">P1:</span>
               <span className="text-xs whitespace-nowrap overflow-hidden">P2:</span>
             </div>
           </div>
@@ -67,10 +48,10 @@ export default function Lobby() {
           className="p-2 bg-slate-100 border-2 border-primary border-opacity-40 rounded"
           value={message}
           onChange={e => setMessage(e.target.value)}
-          onKeyDown={e => (e.key === 'Enter' ? sendMessage() : null)}
+          onKeyDown={e => (e.key === 'Enter' ? handleSendMessage() : null)}
         />
         <div className="flex justify-end">
-          <IconButton text="" onClick={sendMessage} className="border border-primary" svgIcon={sendIcon} />
+          <IconButton text="" onClick={handleSendMessage} className="border border-primary" svgIcon={sendIcon} />
         </div>
       </div>
     </div>
