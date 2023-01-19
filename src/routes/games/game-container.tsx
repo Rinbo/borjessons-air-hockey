@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useOutletContext, useParams } from 'react-router-dom';
 import Lobby from './lobby';
 import SockJS from 'sockjs-client/dist/sockjs';
 import Stomp from 'stompjs';
@@ -20,6 +20,7 @@ export default function GameContainer() {
   const [gameState, setGameState] = React.useState<GameState>(GameState.LOBBY);
   const [messages, setMessages] = React.useState<Array<Message>>([]);
   const [stompClient, setStompClient] = React.useState<Stomp.Client | null>();
+  const { username } = useOutletContext<{ username: string }>();
 
   React.useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
@@ -29,11 +30,10 @@ export default function GameContainer() {
       console.log('Connecting', frame);
       setStompClient(client);
 
-      client.subscribe('/topic/public', (message: Stomp.Message) => {
+      client.send(`/app/lobby/${id}/connect`, {}, JSON.stringify({ username, message: '', datetime: new Date() }));
+
+      client.subscribe(`/topic/lobby-${id}`, (message: Stomp.Message) => {
         setMessages(prev => [...prev, JSON.parse(message.body) as Message]);
-      });
-      client.subscribe('/topic/topic2', message => {
-        console.log('topic2:', message);
       });
     });
 
@@ -41,7 +41,7 @@ export default function GameContainer() {
   }, []);
 
   const sendMessage = (message: string): void => {
-    stompClient && stompClient.send('/app/send-message', {}, JSON.stringify({ username: name, message: message, datetime: new Date() }));
+    stompClient && stompClient.send(`/app/lobby/${id}`, {}, JSON.stringify({ username, message, datetime: new Date() }));
   };
 
   switch (gameState) {

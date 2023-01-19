@@ -1,23 +1,20 @@
-import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { TsForm } from "../../components/form/ts-form";
-import Banner from "../../components/misc/banner";
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { z } from 'zod';
+import { TsForm } from '../../components/form/ts-form';
+import Banner from '../../components/misc/banner';
 
 const NameSchema = z.object({
-  name: z
-    .string()
-    .min(2, { message: "Too short. Min 1 character" })
-    .max(12, { message: "Too long. Max 12 characters" }),
+  name: z.string().min(2, { message: 'Too short. Min 1 character' }).max(12, { message: 'Too long. Max 12 characters' })
 });
 
 export default function ChooseAName() {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from || "/";
+  const from = location.state?.from || '/';
 
   const onSubmit = (data: z.infer<typeof NameSchema>) => {
-    localStorage.setItem("name", data.name);
+    localStorage.setItem('username', data.name);
     navigate(from, { replace: true });
   };
 
@@ -34,11 +31,11 @@ export default function ChooseAName() {
               Save
             </button>
           )}
-          formProps={{ className: "w-full" }}
+          formProps={{ className: 'w-full' }}
           props={{
             name: {
-              className: "mb-2",
-            },
+              className: 'mb-2'
+            }
           }}
         />
       </div>

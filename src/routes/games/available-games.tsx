@@ -17,7 +17,7 @@ export default function AvailableGames() {
     return (
       <div
         key={row.id}
-        className="flex justify-between items-center border border-black px-2 py-1 border-dashed rounded-sm hover:bg-slate-300 duration-300 hover:transform hover:scale-110"
+        className="flex justify-between items-center border border-black px-2 py-1 border-dashed rounded-sm hover:bg-slate-300 duration-300 hover:transform hover:scale-105"
       >
         <span>{`${row.name}'s game`}</span>
         <button className="btn text-primary border border-primary bg-teal-200 hover:bg-teal-400 hover:text-white" onClick={() => navigate('/games/' + row.id)}>
