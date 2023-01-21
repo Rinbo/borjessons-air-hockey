@@ -1,5 +1,5 @@
 import React from 'react';
-import { useOutletContext, useParams } from 'react-router-dom';
+import { Navigate, useOutletContext, useParams } from 'react-router-dom';
 import Lobby from './lobby';
 import SockJS from 'sockjs-client/dist/sockjs';
 import Stomp from 'stompjs';
@@ -7,7 +7,8 @@ import Stomp from 'stompjs';
 enum GameState {
   LOBBY = 'LOBBY',
   GAME_START = 'GAME_START',
-  GAME_RUNNING = 'GAME_RUNNING'
+  GAME_RUNNING = 'GAME_RUNNING',
+  CREATOR_LEFT = 'CREATOR_DISCONNECT'
 }
 
 type Agent = 'PLAYER_1' | 'PLAYER_2';
@@ -34,29 +35,44 @@ export default function GameContainer() {
       console.log('Connecting', frame);
       setStompClient(client);
 
-      client.send(`/app/lobby/${id}/connect`, {}, JSON.stringify({ username, message: '', datetime: new Date() }));
+      client.send(`/app/game/${id}/connect`, {}, createMessage(''));
 
-      client.subscribe(`/topic/lobby/${id}/chat`, (message: Stomp.Message) => {
+      client.subscribe(`/topic/game/${id}/chat`, (message: Stomp.Message) => {
         setMessages(prev => [JSON.parse(message.body) as Message, ...prev]);
       });
 
-      client.subscribe(`/topic/lobby/${id}/players`, (message: Stomp.Message) => {
-        console.log(message.body, 'BODY');
+      client.subscribe(`/topic/game/${id}/players`, (message: Stomp.Message) => {
+        console.log(message.body, 'PLAYER EVENT');
 
         setPlayers(JSON.parse(message.body) as Array<Player>);
       });
+
+      client.subscribe(`/topic/game/${id}/notification`, (message: Stomp.Message) => {
+        console.log(message.body, 'NOTIFY EVENT');
+
+        setGameState(JSON.parse(message.body) as GameState);
+      });
     });
 
-    return () => client.disconnect(() => console.log('disconnecting...'));
+    return () => {
+      client.send(`/app/game/${id}/disconnect`, {}, createMessage(''));
+      client.disconnect(() => console.log('disconnecting...'));
+    };
   }, []);
 
-  console.log(players, 'PLAYERS');
-
   const sendMessage = (message: string): void => {
-    stompClient && stompClient.send(`/app/lobby/${id}/chat`, {}, JSON.stringify({ username, message, datetime: new Date() }));
+    stompClient && stompClient.send(`/app/game/${id}/chat`, {}, createMessage(message));
   };
 
+  function createMessage(message: string) {
+    return JSON.stringify({ username, message, datetime: new Date() });
+  }
+
   switch (gameState) {
+    case GameState.CREATOR_LEFT:
+      console.log('CREATOR LEFT'); // Make modal
+
+      return <Navigate to="/" />;
     case GameState.LOBBY:
       return <Lobby sendMessage={sendMessage} messages={messages} players={players} />;
     case GameState.GAME_START:
