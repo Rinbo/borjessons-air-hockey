@@ -2,19 +2,24 @@ import React from 'react';
 import IconButton from '../../components/buttons/icon-button';
 import shareIcon from '../../assets/svg/share.svg';
 import sendIcon from '../../assets/svg/send.svg';
-import { Message } from './game-container';
+import { Message, Player } from './game-container';
 
 type Props = {
   sendMessage: (message: string) => void;
   messages: Array<Message>;
+  players: Array<Player>;
 };
 
-export default function Lobby({ sendMessage, messages }: Props) {
+export default function Lobby({ sendMessage, messages, players }: Props) {
   const [message, setMessage] = React.useState<string>('');
 
   function handleSendMessage() {
     sendMessage(message);
     setMessage('');
+  }
+
+  function getPlayerName(number: number): string | undefined {
+    return players.find(player => player.agent === `PLAYER_${number}`)?.username;
   }
 
   return (
@@ -25,8 +30,8 @@ export default function Lobby({ sendMessage, messages }: Props) {
           <div className="flex items-center gap-2">
             <button className="btn btn-primary-outlined">Ready</button>
             <div className="inline-flex flex-col gap-2">
-              <span className="text-xs whitespace-nowrap overflow-hidden">P1:</span>
-              <span className="text-xs whitespace-nowrap overflow-hidden">P2:</span>
+              <span className="text-xs whitespace-nowrap overflow-hidden">P1: {getPlayerName(1)}</span>
+              <span className="text-xs whitespace-nowrap overflow-hidden">P2: {getPlayerName(2)}</span>
             </div>
           </div>
           <div className="flex gap-2">
