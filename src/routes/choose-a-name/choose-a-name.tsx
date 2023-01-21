@@ -27,7 +27,7 @@ export default function ChooseAName() {
           schema={NameSchema}
           onSubmit={onSubmit}
           renderAfter={() => (
-            <button className="btn btn-primary w-full mt-2" type="submit">
+            <button className="btn btn-primary w-full mt-2" type="submit" onKeyDown={e => (e.key === 'Enter' ? onSubmit : null)}>
               Save
             </button>
           )}

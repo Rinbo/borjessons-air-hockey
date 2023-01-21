@@ -33,7 +33,7 @@ export default function GameContainer() {
       client.send(`/app/lobby/${id}/connect`, {}, JSON.stringify({ username, message: '', datetime: new Date() }));
 
       client.subscribe(`/topic/lobby-${id}`, (message: Stomp.Message) => {
-        setMessages(prev => [...prev, JSON.parse(message.body) as Message]);
+        setMessages(prev => [JSON.parse(message.body) as Message, ...prev]);
       });
     });
 

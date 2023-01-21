@@ -34,7 +34,7 @@ export default function Lobby({ sendMessage, messages }: Props) {
             <button className="btn btn-orange-outlined w-20">Exit</button>
           </div>
         </div>
-        <div className="flex-1 flex flex-col justify-end bg-slate-100 p-2 border-2 border-primary border-opacity-50 rounded-md ">
+        <div className="flex-1 flex flex-col-reverse bg-slate-100 p-2 border-2 border-primary border-opacity-50 rounded-md overflow-y-scroll">
           {messages.map((line, index) => (
             <div className="flex gap-2" key={index}>
               <span>{new Date(Number.parseInt(line.datetime) * 1000).toLocaleTimeString()}</span>
