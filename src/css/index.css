@@ -35,7 +35,3 @@ body {
 .btn-orange-outlined:hover {
   @apply hover:bg-orange-300 hover:border-orange-300;
 }
-
-.my-class {
-  overflow-y: scroll;
-}

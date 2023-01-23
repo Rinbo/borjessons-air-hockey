@@ -13,14 +13,25 @@ type Props = {
 
 export default function Lobby({ sendMessage, messages, players, toggleReady }: Props) {
   const [message, setMessage] = React.useState<string>('');
+  const [isReady, setIsReady] = React.useState<boolean>(false);
 
   function handleSendMessage() {
     sendMessage(message);
     setMessage('');
   }
 
-  function getPlayerName(number: number): string | undefined {
-    return players.find(player => player.agency === `PLAYER_${number}`)?.username;
+  function onToggleReady() {
+    toggleReady();
+    setIsReady(prevState => !prevState);
+  }
+
+  console.log(isReady);
+
+  function shortenAgency(agency: string): string {
+    return agency
+      .split('_')
+      .map(e => e.charAt(0))
+      .join('');
   }
 
   return (
@@ -29,12 +40,15 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
         <div className="text-center text-3xl py-4">Lobby</div>
         <div className="flex justify-between">
           <div className="flex items-center gap-2">
-            <button className="btn btn-primary-outlined" onClick={toggleReady}>
+            <button className={`btn ${isReady ? 'border bg-primary border-primary text-bg' : 'btn-primary-outlined'}`} onClick={onToggleReady}>
               Ready
             </button>
             <div className="inline-flex flex-col gap-2">
-              <span className="text-xs whitespace-nowrap overflow-hidden">P1: {getPlayerName(1)}</span>
-              <span className="text-xs whitespace-nowrap overflow-hidden">P2: {getPlayerName(2)}</span>
+              {players.map(({ username, ready, agency }) => (
+                <span key={agency} className={`text-xs whitespace-nowrap overflow-hidden ${ready && 'text-green-400'}`}>
+                  {shortenAgency(agency)}: {username}
+                </span>
+              ))}
             </div>
           </div>
           <div className="flex gap-2">
