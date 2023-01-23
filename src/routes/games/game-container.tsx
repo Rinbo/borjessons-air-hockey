@@ -14,7 +14,7 @@ enum GameState {
 type Agent = 'PLAYER_1' | 'PLAYER_2';
 
 export type Message = { username: string; message: string; datetime: string };
-export type Player = { username: string; agent: Agent };
+export type Player = { username: string; agency: Agent; ready: boolean };
 
 /**
  * Need some kind of state machine for transitions between states.
@@ -64,6 +64,10 @@ export default function GameContainer() {
     stompClient && stompClient.send(`/app/game/${id}/chat`, {}, createMessage(message));
   };
 
+  const toggleReady = (): void => {
+    stompClient && stompClient.send(`/app/game/${id}/toggle-ready`, {}, '');
+  };
+
   function createMessage(message: string) {
     return JSON.stringify({ username, message, datetime: new Date() });
   }
@@ -74,7 +78,7 @@ export default function GameContainer() {
 
       return <Navigate to="/" />;
     case GameState.LOBBY:
-      return <Lobby sendMessage={sendMessage} messages={messages} players={players} />;
+      return <Lobby sendMessage={sendMessage} messages={messages} players={players} toggleReady={toggleReady} />;
     case GameState.GAME_START:
       return <div className="text-2xl text-center pt-2">1, 2, 3 - BOOM</div>;
     case GameState.GAME_RUNNING:

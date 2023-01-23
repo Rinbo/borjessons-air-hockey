@@ -8,9 +8,10 @@ type Props = {
   sendMessage: (message: string) => void;
   messages: Array<Message>;
   players: Array<Player>;
+  toggleReady: () => void;
 };
 
-export default function Lobby({ sendMessage, messages, players }: Props) {
+export default function Lobby({ sendMessage, messages, players, toggleReady }: Props) {
   const [message, setMessage] = React.useState<string>('');
 
   function handleSendMessage() {
@@ -19,7 +20,7 @@ export default function Lobby({ sendMessage, messages, players }: Props) {
   }
 
   function getPlayerName(number: number): string | undefined {
-    return players.find(player => player.agent === `PLAYER_${number}`)?.username;
+    return players.find(player => player.agency === `PLAYER_${number}`)?.username;
   }
 
   return (
@@ -28,7 +29,9 @@ export default function Lobby({ sendMessage, messages, players }: Props) {
         <div className="text-center text-3xl py-4">Lobby</div>
         <div className="flex justify-between">
           <div className="flex items-center gap-2">
-            <button className="btn btn-primary-outlined">Ready</button>
+            <button className="btn btn-primary-outlined" onClick={toggleReady}>
+              Ready
+            </button>
             <div className="inline-flex flex-col gap-2">
               <span className="text-xs whitespace-nowrap overflow-hidden">P1: {getPlayerName(1)}</span>
               <span className="text-xs whitespace-nowrap overflow-hidden">P2: {getPlayerName(2)}</span>
