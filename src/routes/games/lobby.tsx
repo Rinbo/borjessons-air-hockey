@@ -25,8 +25,6 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
     setIsReady(prevState => !prevState);
   }
 
-  console.log(isReady);
-
   function shortenAgency(agency: string): string {
     return agency
       .split('_')

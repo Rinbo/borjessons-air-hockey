@@ -3,6 +3,7 @@ import { Navigate, useOutletContext, useParams } from 'react-router-dom';
 import Lobby from './lobby';
 import SockJS from 'sockjs-client/dist/sockjs';
 import Stomp from 'stompjs';
+import useCountdown from '../../hooks/useCountdown';
 
 enum GameState {
   LOBBY = 'LOBBY',
@@ -26,6 +27,7 @@ export default function GameContainer() {
   const [players, setPlayers] = React.useState<Array<Player>>([]);
   const [stompClient, setStompClient] = React.useState<Stomp.Client | null>();
   const { username } = useOutletContext<{ username: string }>();
+  const countdownComplete = useCountdown(players, setMessages);
 
   React.useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
@@ -60,6 +62,18 @@ export default function GameContainer() {
     };
   }, []);
 
+  console.log(countdownComplete, 'COUNTDOWN COMPLETE');
+
+  React.useEffect(() => {
+    if (countdownComplete) {
+      setGameState(GameState.GAME_START);
+    } else {
+      setGameState(GameState.LOBBY);
+    }
+  }, [countdownComplete]);
+
+  console.log('RE-RENDERING');
+
   const sendMessage = (message: string): void => {
     stompClient && stompClient.send(`/app/game/${id}/chat`, {}, createMessage(message));
   };
@@ -80,11 +94,11 @@ export default function GameContainer() {
     case GameState.LOBBY:
       return <Lobby sendMessage={sendMessage} messages={messages} players={players} toggleReady={toggleReady} />;
     case GameState.GAME_START:
-      return <div className="text-2xl text-center pt-2">1, 2, 3 - BOOM</div>;
+      return <div className="text-2xl text-center pt-6 h-screen">1, 2, 3 - BOOM</div>;
     case GameState.GAME_RUNNING:
-      return <div className="text-2xl text-center pt-2">GAME RUNNING</div>;
+      return <div className="text-2xl text-center pt-6 h-screen">GAME RUNNING</div>;
     default:
       console.error('Unknow state: ' + gameState);
-      return <div className="text-2xl text-center pt-2">How did you end up here?</div>;
+      return <div className="text-2xl text-center pt-6 h-screen">How did you end up here?</div>;
   }
 }
