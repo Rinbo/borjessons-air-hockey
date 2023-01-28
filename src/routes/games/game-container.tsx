@@ -3,7 +3,6 @@ import { Navigate, useOutletContext, useParams } from 'react-router-dom';
 import Lobby from './lobby';
 import SockJS from 'sockjs-client/dist/sockjs';
 import Stomp from 'stompjs';
-import useCountdown from '../../hooks/useCountdown';
 
 enum GameState {
   LOBBY = 'LOBBY',
@@ -19,6 +18,7 @@ export type Player = { username: string; agency: Agent; ready: boolean };
 
 /**
  * Need some kind of state machine for transitions between states.
+ * ALSO: Error handling if backend is unavailable
  */
 export default function GameContainer() {
   const { id } = useParams<string>();
@@ -27,7 +27,6 @@ export default function GameContainer() {
   const [players, setPlayers] = React.useState<Array<Player>>([]);
   const [stompClient, setStompClient] = React.useState<Stomp.Client | null>();
   const { username } = useOutletContext<{ username: string }>();
-  const countdownComplete = useCountdown(players, setMessages);
 
   React.useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
@@ -49,7 +48,7 @@ export default function GameContainer() {
         setPlayers(JSON.parse(message.body) as Array<Player>);
       });
 
-      client.subscribe(`/topic/game/${id}/notification`, (message: Stomp.Message) => {
+      client.subscribe(`/topic/game/${id}/game-state`, (message: Stomp.Message) => {
         console.log(message.body, 'NOTIFY EVENT');
 
         setGameState(JSON.parse(message.body) as GameState);
@@ -61,16 +60,6 @@ export default function GameContainer() {
       client.disconnect(() => console.log('disconnecting...'));
     };
   }, []);
-
-  console.log(countdownComplete, 'COUNTDOWN COMPLETE');
-
-  React.useEffect(() => {
-    if (countdownComplete) {
-      setGameState(GameState.GAME_START);
-    } else {
-      setGameState(GameState.LOBBY);
-    }
-  }, [countdownComplete]);
 
   console.log('RE-RENDERING');
 
