@@ -13,7 +13,7 @@ enum GameState {
 
 type Agent = 'PLAYER_1' | 'PLAYER_2';
 
-export type Message = { username: string; message: string; datetime: string };
+export type Message = { username: string; message: string; datetime: Date };
 export type Player = { username: string; agency: Agent; ready: boolean };
 
 /**
@@ -39,7 +39,7 @@ export default function GameContainer() {
       client.send(`/app/game/${id}/connect`, {}, createMessage(''));
 
       client.subscribe(`/topic/game/${id}/chat`, (message: Stomp.Message) => {
-        setMessages(prev => [JSON.parse(message.body) as Message, ...prev]);
+        setMessages(prev => [{ ...JSON.parse(message.body), datetime: new Date() }, ...prev]);
       });
 
       client.subscribe(`/topic/game/${id}/players`, (message: Stomp.Message) => {
@@ -71,8 +71,8 @@ export default function GameContainer() {
     stompClient && stompClient.send(`/app/game/${id}/toggle-ready`, {}, '');
   };
 
-  function createMessage(message: string) {
-    return JSON.stringify({ username, message, datetime: new Date() });
+  function createMessage(message: string): string {
+    return JSON.stringify({ username, message });
   }
 
   switch (gameState) {

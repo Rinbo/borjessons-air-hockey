@@ -11,6 +11,8 @@ type Props = {
   toggleReady: () => void;
 };
 
+const dateOptions = { hour12: false, hour: '2-digit', minute: '2-digit' };
+
 export default function Lobby({ sendMessage, messages, players, toggleReady }: Props) {
   const [message, setMessage] = React.useState<string>('');
   const [isReady, setIsReady] = React.useState<boolean>(false);
@@ -57,7 +59,7 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
         <div className="flex-1 flex flex-col-reverse bg-slate-100 p-2 border-2 border-primary border-opacity-50 rounded-md overflow-y-scroll">
           {messages.map((line, index) => (
             <div className="flex gap-2" key={index}>
-              <span>{new Date(Number.parseInt(line.datetime) * 1000).toLocaleTimeString()}</span>
+              <span>{line.datetime.toLocaleTimeString('en-US', dateOptions)}</span>
               <span className="ml-1">{line.username}:</span>
               <span className="ml-1">{line.message}</span>
             </div>
