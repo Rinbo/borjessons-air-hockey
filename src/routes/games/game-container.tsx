@@ -5,10 +5,10 @@ import SockJS from 'sockjs-client/dist/sockjs';
 import Stomp from 'stompjs';
 
 enum GameState {
+  CREATOR_LEFT = 'CREATOR_DISCONNECT',
   LOBBY = 'LOBBY',
-  GAME_START = 'GAME_START',
-  GAME_RUNNING = 'GAME_RUNNING',
-  CREATOR_LEFT = 'CREATOR_DISCONNECT'
+  FORBIDDEN = 'FORBIDDEN',
+  GAME_RUNNING = 'GAME_RUNNING'
 }
 
 type Agent = 'PLAYER_1' | 'PLAYER_2';
@@ -53,10 +53,16 @@ export default function GameContainer() {
 
         setGameState(JSON.parse(message.body) as GameState);
       });
+
+      client.subscribe(`/topic/game/${username}/game-state`, (message: Stomp.Message) => {
+        console.log(message.body, 'NOTIFY EVENT');
+
+        setGameState(JSON.parse(message.body) as GameState);
+      });
     });
 
     return () => {
-      client.send(`/app/game/${id}/disconnect`, {}, createMessage(''));
+      client.send(`/app/game/${id}/disconnect`, {});
       client.disconnect(() => console.log('disconnecting...'));
     };
   }, []);
@@ -82,8 +88,8 @@ export default function GameContainer() {
       return <Navigate to="/" />;
     case GameState.LOBBY:
       return <Lobby sendMessage={sendMessage} messages={messages} players={players} toggleReady={toggleReady} />;
-    case GameState.GAME_START:
-      return <div className="text-2xl text-center pt-6 h-screen">1, 2, 3 - BOOM</div>;
+    case GameState.FORBIDDEN:
+      return <div className="text-2xl text-center pt-6 h-screen">FORBIDDEN - YOU DO NOT BELONG HERE</div>;
     case GameState.GAME_RUNNING:
       return <div className="text-2xl text-center pt-6 h-screen">GAME RUNNING</div>;
     default:
