@@ -9,6 +9,7 @@ import GenerateRoom from './routes/games/generate-room';
 import './css/index.css';
 import AvailableGames from './routes/games/available-games';
 import GameContainer from './routes/games/game-container';
+import Game from './routes/games/game';
 
 const router = createBrowserRouter([
   {
@@ -30,7 +31,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <AvailableGames /> },
       { path: 'new', element: <GenerateRoom /> },
-      { path: ':id', element: <GameContainer /> }
+      { path: ':id', element: <GameContainer /> },
+      { path: 'test', element: <Game /> }
     ]
   }
 ]);

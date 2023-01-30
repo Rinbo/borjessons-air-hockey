@@ -3,6 +3,7 @@ import IconButton from '../../components/buttons/icon-button';
 import shareIcon from '../../assets/svg/share.svg';
 import sendIcon from '../../assets/svg/send.svg';
 import { Message, Player } from './game-container';
+import { formatTime } from '../../utils/time-utils';
 
 type Props = {
   sendMessage: (message: string) => void;
@@ -10,8 +11,6 @@ type Props = {
   players: Array<Player>;
   toggleReady: () => void;
 };
-
-const dateOptions = { hour12: false, hour: '2-digit', minute: '2-digit' };
 
 export default function Lobby({ sendMessage, messages, players, toggleReady }: Props) {
   const [message, setMessage] = React.useState<string>('');
@@ -59,7 +58,7 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
         <div className="flex-1 flex flex-col-reverse bg-slate-100 p-2 border-2 border-primary border-opacity-50 rounded-md overflow-y-scroll">
           {messages.map((line, index) => (
             <div className="flex gap-2" key={index}>
-              <span>{line.datetime.toLocaleTimeString('en-US', dateOptions)}</span>
+              <span>{formatTime(line.datetime)}</span>
               <span className="ml-1">{line.username}:</span>
               <span className="ml-1">{line.message}</span>
             </div>

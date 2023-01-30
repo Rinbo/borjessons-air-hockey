@@ -3,6 +3,7 @@ import { Navigate, useOutletContext, useParams } from 'react-router-dom';
 import Lobby from './lobby';
 import SockJS from 'sockjs-client/dist/sockjs';
 import Stomp from 'stompjs';
+import Game from './game';
 
 enum GameState {
   CREATOR_LEFT = 'CREATOR_DISCONNECT',
@@ -91,7 +92,7 @@ export default function GameContainer() {
     case GameState.FORBIDDEN:
       return <div className="text-2xl text-center pt-6 h-screen">FORBIDDEN - YOU DO NOT BELONG HERE</div>;
     case GameState.GAME_RUNNING:
-      return <div className="text-2xl text-center pt-6 h-screen">GAME RUNNING</div>;
+      return <Game />;
     default:
       console.error('Unknow state: ' + gameState);
       return <div className="text-2xl text-center pt-6 h-screen">How did you end up here?</div>;
