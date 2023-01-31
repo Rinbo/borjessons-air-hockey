@@ -1,27 +1,35 @@
-import React from 'react';
+import React, { RefObject } from 'react';
 
-type Props = {};
+const ASPECT_RATIO = 1.6;
+const MAX_WIDTH = 500;
+const X_PADDING = 10;
 
-const Canvas: React.FC<Props> = () => {
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+type Props = { canvasRef: RefObject<HTMLCanvasElement> };
 
-  const [width, setWidth] = React.useState(400);
-  const [height, setHeight] = React.useState(600);
+const Canvas: React.FC<Props> = ({ canvasRef }) => {
+  const [width, setWidth] = React.useState<number>(0);
+  const [height, setHeight] = React.useState<number>(0);
+
+  console.log(window.innerWidth, 'window width');
+  console.log(window.innerHeight, 'window height');
 
   React.useEffect(() => {
     if (typeof ResizeObserver === 'undefined') return;
 
-    const observer = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        setWidth(entry.contentRect.width);
-        setHeight(entry.contentRect.height);
-      }
+    const observer = new ResizeObserver(_ => {
+      const windowWidth = window.innerWidth;
+      const actualWidth = Math.min(windowWidth, MAX_WIDTH) - X_PADDING;
+
+      setWidth(actualWidth);
+      setHeight(actualWidth * ASPECT_RATIO);
     });
 
     observer.observe(canvasRef.current as Element);
 
     return () => observer.disconnect();
   }, []);
+
+  console.log(width, 'ACTUAL WIDTH');
 
   React.useEffect(() => {
     if (canvasRef.current) {
