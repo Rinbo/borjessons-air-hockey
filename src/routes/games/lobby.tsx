@@ -34,17 +34,17 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
   }
 
   return (
-    <div className="sm:container sm:max-w-3xl h-screen sm:mx-auto px-2 py-4">
-      <div className="flex flex-col gap-2 h-full">
-        <div className="text-center text-3xl py-4">Lobby</div>
+    <div className="h-screen px-2 py-4 sm:container sm:mx-auto sm:max-w-3xl">
+      <div className="flex h-full flex-col gap-2">
+        <div className="py-4 text-center text-3xl">Lobby</div>
         <div className="flex justify-between">
           <div className="flex items-center gap-2">
-            <button className={`btn ${isReady ? 'border bg-primary border-primary text-bg' : 'btn-primary-outlined'}`} onClick={onToggleReady}>
+            <button className={`btn ${isReady ? 'border border-primary bg-primary text-bg' : 'btn-primary-outlined'}`} onClick={onToggleReady}>
               Ready
             </button>
             <div className="inline-flex flex-col gap-2">
               {players.map(({ username, ready, agency }) => (
-                <span key={agency} className={`text-xs whitespace-nowrap overflow-hidden ${ready && 'text-green-400'}`}>
+                <span key={agency} className={`overflow-hidden whitespace-nowrap text-xs ${ready && 'text-green-400'}`}>
                   {shortenAgency(agency)}: {username}
                 </span>
               ))}
@@ -55,7 +55,7 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
             <button className="btn btn-orange-outlined w-20">Exit</button>
           </div>
         </div>
-        <div className="flex-1 flex flex-col-reverse bg-slate-100 p-2 border-2 border-primary border-opacity-50 rounded-md overflow-y-scroll">
+        <div className="flex flex-1 flex-col-reverse overflow-y-scroll rounded-md border-2 border-primary border-opacity-50 bg-slate-100 p-2">
           {messages.map((line, index) => (
             <div className="flex gap-2" key={index}>
               <span>{formatTime(line.datetime)}</span>
@@ -66,7 +66,7 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
         </div>
         <input
           placeholder="Write something..."
-          className="p-2 bg-slate-100 border-2 border-primary border-opacity-40 rounded"
+          className="rounded border-2 border-primary border-opacity-40 bg-slate-100 p-2"
           value={message}
           onChange={e => setMessage(e.target.value)}
           onKeyDown={e => (e.key === 'Enter' ? handleSendMessage() : null)}
