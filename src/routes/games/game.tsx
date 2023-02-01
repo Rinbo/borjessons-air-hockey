@@ -17,6 +17,7 @@ type Position = Speed;
 export default function Game() {
   const [width, height] = useWindowSize();
   const board = React.useRef<Board>();
+  const lastFrame = React.useRef<number>(performance.now());
 
   //useInterval(gameLoop, 1000 / FPS);
 
@@ -33,8 +34,12 @@ export default function Game() {
     board.current?.setSize({ width, height });
   }, [width, height]);
 
-  function tick(currentTick: number) {
-    board.current?.draw();
+  function tick(currentTime: number) {
+    const elapsedTime = currentTime - lastFrame.current;
+    if (elapsedTime > 1000 / FPS) {
+      board.current?.draw();
+      lastFrame.current = currentTime;
+    }
     requestAnimationFrame(tick);
   }
 
