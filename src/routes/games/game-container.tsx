@@ -90,11 +90,11 @@ export default function GameContainer() {
     case GameState.LOBBY:
       return <Lobby sendMessage={sendMessage} messages={messages} players={players} toggleReady={toggleReady} />;
     case GameState.FORBIDDEN:
-      return <div className="text-2xl text-center pt-6 h-screen">FORBIDDEN - YOU DO NOT BELONG HERE</div>;
+      return <div className="h-screen pt-6 text-center text-2xl">FORBIDDEN - YOU DO NOT BELONG HERE</div>;
     case GameState.GAME_RUNNING:
       return <Game />;
     default:
       console.error('Unknow state: ' + gameState);
-      return <div className="text-2xl text-center pt-6 h-screen">How did you end up here?</div>;
+      return <div className="h-screen pt-6 text-center text-2xl">How did you end up here?</div>;
   }
 }
