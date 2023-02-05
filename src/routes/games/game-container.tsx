@@ -12,8 +12,7 @@ enum GameState {
   GAME_RUNNING = 'GAME_RUNNING'
 }
 
-type Agent = 'PLAYER_1' | 'PLAYER_2';
-
+export type Agent = 'PLAYER_1' | 'PLAYER_2';
 export type Message = { username: string; message: string; datetime: Date };
 export type Player = { username: string; agency: Agent; ready: boolean };
 
