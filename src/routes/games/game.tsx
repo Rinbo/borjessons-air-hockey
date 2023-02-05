@@ -16,7 +16,7 @@ const FPS = 60;
 type Speed = { x: number; y: number };
 type Position = Speed;
 
-type Props = { stompClient: Stomp.Client; players: Player[]; id: string };
+type Props = { stompClient: Stomp.Client; players: Player[] };
 
 /**
  * Need handler for sending player handle position on handle move. Need reportStartPosition to be reported on first draw.

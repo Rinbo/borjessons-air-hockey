@@ -91,7 +91,7 @@ export default function GameContainer() {
     case GameState.FORBIDDEN:
       return <div className="h-screen pt-6 text-center text-2xl">FORBIDDEN - YOU DO NOT BELONG HERE</div>;
     case GameState.GAME_RUNNING:
-      return <Game />;
+      return <Game players={players} stompClient={stompClient!} />;
     default:
       console.error('Unknow state: ' + gameState);
       return <div className="h-screen pt-6 text-center text-2xl">How did you end up here?</div>;

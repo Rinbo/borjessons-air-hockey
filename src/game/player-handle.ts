@@ -32,7 +32,7 @@ export default class PlayerHandle implements GameObject {
         const touch = event.targetTouches[0];
         this.position = { x: touch.clientX / width, y: touch.clientY / height };
         this.broadcastHandle(this.position);
-        this.drawCircle();
+        this.drawHandle();
       }
     });
 
@@ -47,7 +47,7 @@ export default class PlayerHandle implements GameObject {
   }
 
   public draw() {
-    this.drawCircle();
+    this.drawHandle();
   }
 
   private isWithinBoundsOfHandle(x: number, y: number) {
@@ -55,7 +55,7 @@ export default class PlayerHandle implements GameObject {
     return (x - this.position.x * width) ** 2 + (y - this.position.y * height) ** 2 <= HANDLE_RADIUS * width ** 2;
   }
 
-  private drawCircle() {
+  private drawHandle() {
     const ctx = this.board.getContext();
     const { width, height } = this.board.getCanvas();
 
