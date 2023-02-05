@@ -11,7 +11,7 @@ export interface GameObject {
   draw: () => void;
 }
 
-export type UpdateHandle = (destination: string, headers?: {}, body?: string) => any;
+export type BroadcastHandle = (position: Position) => any;
 
 export default class Board {
   private canvas: HTMLCanvasElement;
@@ -20,11 +20,11 @@ export default class Board {
   private playerHandle: PlayerHandle;
   private size: Size;
 
-  constructor(canvas: HTMLCanvasElement, size: Size, updateHandle: UpdateHandle) {
+  constructor(canvas: HTMLCanvasElement, size: Size, broadcastHandle: BroadcastHandle) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     this.opponentHandle = new Handle(this);
-    this.playerHandle = new PlayerHandle(this);
+    this.playerHandle = new PlayerHandle(this, broadcastHandle);
     this.size = size;
   }
 
@@ -35,6 +35,10 @@ export default class Board {
 
   public getCanvas(): HTMLCanvasElement {
     return this.canvas;
+  }
+
+  public getContext(): CanvasRenderingContext2D {
+    return this.ctx;
   }
 
   public update(broadcastState: BroadcastState): void {

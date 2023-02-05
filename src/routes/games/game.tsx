@@ -34,7 +34,7 @@ export default function Game({ stompClient, players }: Props) {
 
   React.useEffect(() => {
     const canvas = document.getElementById('game-board') as HTMLCanvasElement;
-    const board = new Board(canvas, { width, height }, stompClient.send);
+    const board = new Board(canvas, { width, height }, (position: Position) => stompClient.send(`/app/game/${id}/update-handle`, {}, JSON.stringify(position)));
     boardRef.current = board;
 
     stompClient.subscribe(`/topic/game/${id}/board-state/${getAgencyExtention(players, username)}`, (message: Stomp.Message) => {
