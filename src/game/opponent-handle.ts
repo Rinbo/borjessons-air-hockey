@@ -3,10 +3,11 @@ import { HANDLE_RADIUS, OPPONENT_HANDLE_START_POS } from './constants';
 
 export default class OpponentHandle implements GameObject {
   private board;
-  private position: Position = OPPONENT_HANDLE_START_POS;
+  private position: Position;
 
   constructor(board: Board) {
     this.board = board;
+    this.position = OPPONENT_HANDLE_START_POS;
     this.draw();
   }
 
@@ -22,9 +23,9 @@ export default class OpponentHandle implements GameObject {
     const ctx = this.board.getContext();
     const { width, height } = this.board.getCanvas();
 
-    ctx.clearRect(0, 0, width, height);
+    //ctx.clearRect(0, 0, width, height);
     ctx.beginPath();
-    ctx.arc(this.position.x, this.position.y, HANDLE_RADIUS * width, 0, 2 * Math.PI);
+    ctx.arc(this.position.x * width, this.position.y * width, HANDLE_RADIUS * width, 0, 2 * Math.PI);
     ctx.fill();
   }
 }

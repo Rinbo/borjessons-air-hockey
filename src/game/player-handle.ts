@@ -4,12 +4,14 @@ import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
 export default class PlayerHandle implements GameObject {
   private board: Board;
   private broadcastHandle: BroadcastHandle;
-  private isDragging: boolean = false;
-  private position: Position = PLAYER_HANDLE_START_POS;
+  private isDragging: boolean;
+  private position: Position;
 
   constructor(board: Board, broadcastHandle: BroadcastHandle) {
     this.board = board;
     this.broadcastHandle = broadcastHandle;
+    this.isDragging = false;
+    this.position = PLAYER_HANDLE_START_POS;
     this.draw();
     this.setEventListeners();
   }
@@ -30,6 +32,11 @@ export default class PlayerHandle implements GameObject {
       event.preventDefault();
       if (this.isDragging) {
         const touch = event.targetTouches[0];
+        console.log(canvas.width, canvas.height, 'CANVAS');
+        console.log('x:', touch.clientX, 'y:', touch.clientY);
+        console.log('x%:', touch.clientX / width, 'y%:', touch.clientY / height);
+
+        // HERE IS THE PROBLEM: touch.clientY does not reflect the relative position on canvas
         this.position = { x: touch.clientX / width, y: touch.clientY / height };
         this.broadcastHandle(this.position);
         this.drawHandle();
@@ -59,9 +66,9 @@ export default class PlayerHandle implements GameObject {
     const ctx = this.board.getContext();
     const { width, height } = this.board.getCanvas();
 
-    ctx.clearRect(0, 0, width, height);
+    //ctx.clearRect(0, 0, width, height);
     ctx.beginPath();
-    ctx.arc(this.position.x, this.position.y, HANDLE_RADIUS * width, 0, 2 * Math.PI);
+    ctx.arc(this.position.x * width, this.position.y * height, HANDLE_RADIUS * width, 0, 2 * Math.PI);
     ctx.fill();
   }
 }

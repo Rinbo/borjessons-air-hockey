@@ -9,7 +9,7 @@ import GenerateRoom from './routes/games/generate-room';
 import './css/index.css';
 import AvailableGames from './routes/games/available-games';
 import GameContainer from './routes/games/game-container';
-import Game from './routes/games/game';
+import TestGame from './routes/games/test-game';
 
 const router = createBrowserRouter([
   {
@@ -19,7 +19,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/online',
-    element: <h1 className="text-3xl text-center pt-8">Online Users</h1>
+    element: <h1 className="pt-8 text-center text-3xl">Online Users</h1>
   },
   {
     path: '/choose-a-name',
@@ -32,7 +32,7 @@ const router = createBrowserRouter([
       { index: true, element: <AvailableGames /> },
       { path: 'new', element: <GenerateRoom /> },
       { path: ':id', element: <GameContainer /> },
-      { path: 'test', element: <Game /> }
+      { path: 'test', element: <TestGame /> }
     ]
   }
 ]);
@@ -40,7 +40,7 @@ const router = createBrowserRouter([
 document.cookie = `SameSite=None;Secure`;
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <div className="text-primary bg-bg h-min w-screen">
+  <div className="h-min w-screen bg-bg text-primary">
     <RouterProvider router={router} />
   </div>
 );
