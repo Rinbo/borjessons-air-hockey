@@ -1,6 +1,8 @@
 import Board, { BroadcastHandle, GameObject, Position } from './board';
 import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
 
+type TouchClick = Event & TouchEvent;
+
 export default class PlayerHandle implements GameObject {
   private board: Board;
   private broadcastHandle: BroadcastHandle;
@@ -20,24 +22,16 @@ export default class PlayerHandle implements GameObject {
     const canvas = this.board.getCanvas();
     const { width, height } = this.board.getSize();
 
-    canvas.addEventListener('touchstart', event => {
-      event.preventDefault();
-      const touch = event.targetTouches[0];
-      if (this.isWithinBoundsOfHandle(touch.clientX, touch.clientY)) {
-        this.isDragging = true;
-      }
-    });
+    canvas.addEventListener('touchstart', event => this.onStart(event, canvas));
 
     canvas.addEventListener('touchmove', event => {
       event.preventDefault();
+      const { left, top } = canvas.getBoundingClientRect();
+
       if (this.isDragging) {
         const touch = event.targetTouches[0];
-        console.log(canvas.width, canvas.height, 'CANVAS');
-        console.log('x:', touch.clientX, 'y:', touch.clientY);
-        console.log('x%:', touch.clientX / width, 'y%:', touch.clientY / height);
 
-        // HERE IS THE PROBLEM: touch.clientY does not reflect the relative position on canvas
-        this.position = { x: touch.clientX / width, y: touch.clientY / height };
+        this.position = { x: (touch.clientX - left) / width, y: (touch.clientY - top) / height };
         this.broadcastHandle(this.position);
         this.drawHandle();
       }
@@ -55,6 +49,19 @@ export default class PlayerHandle implements GameObject {
 
   public draw() {
     this.drawHandle();
+  }
+
+  private onStart(event: TouchClick, canvas: HTMLCanvasElement) {
+    event.preventDefault();
+    const { left, top } = canvas.getBoundingClientRect();
+
+    const touch = event?.targetTouches[0] || event;
+    console.log(this.position);
+    console.log(touch.clientX - left, touch.clientY - top);
+
+    if (this.isWithinBoundsOfHandle(touch.clientX - left, touch.clientY - top)) {
+      this.isDragging = true;
+    }
   }
 
   private isWithinBoundsOfHandle(x: number, y: number) {
