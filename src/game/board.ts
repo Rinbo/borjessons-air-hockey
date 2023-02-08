@@ -52,6 +52,7 @@ export default class Board {
     this.size = size;
     this.playerHandle.update(PLAYER_HANDLE_START_POS);
     this.opponentHandle.update(OPPONENT_HANDLE_START_POS);
+    this.playerHandle.setEventListeners();
     this.draw();
     this.ctx.restore();
   }

@@ -1,7 +1,7 @@
 import Board, { BroadcastHandle, GameObject, Position } from './board';
 import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
 
-type ClientPos = MouseEvent | Touch;
+type ClientEvent = MouseEvent | Touch;
 
 export default class PlayerHandle implements GameObject {
   private board: Board;
@@ -18,7 +18,7 @@ export default class PlayerHandle implements GameObject {
     this.setEventListeners();
   }
 
-  private setEventListeners(): void {
+  public setEventListeners(): void {
     const canvas = this.board.getCanvas();
 
     canvas.addEventListener('touchstart', event => this.onStart(event.targetTouches[0], canvas));
@@ -37,21 +37,22 @@ export default class PlayerHandle implements GameObject {
     this.drawHandle();
   }
 
-  private onStart(event: ClientPos, canvas: HTMLCanvasElement) {
+  private onStart(event: ClientEvent, canvas: HTMLCanvasElement) {
     const { left, top } = canvas.getBoundingClientRect();
 
     if (this.isWithinBoundsOfHandle(event.clientX - left, event.clientY - top)) {
-      console.log('ON START', event);
+      console.log('ON START', this.isDragging);
       this.isDragging = true;
     }
   }
 
-  private onMove(event: ClientPos, canvas: HTMLCanvasElement) {
+  private onMove(event: ClientEvent, canvas: HTMLCanvasElement) {
     const { left, top } = canvas.getBoundingClientRect();
     const { width, height } = this.board.getSize();
 
+    console.log('IS MOVING BEFORE DRAGGING', this.isDragging);
     if (this.isDragging) {
-      console.log('IS MOVING', this.isDragging);
+      console.log('IS MOVING IN DRAGGING', this.isDragging);
 
       this.position = { x: (event.clientX - left) / width, y: (event.clientY - top) / height };
       this.broadcastHandle(this.position);
@@ -60,7 +61,7 @@ export default class PlayerHandle implements GameObject {
   }
 
   private onEnd(event: Event) {
-    console.log('ON END', event);
+    console.log('ON END', this.isDragging);
 
     this.isDragging = false;
     console.log('NOW WE SHOULD HAVE SET IT', this.isDragging);
@@ -68,7 +69,7 @@ export default class PlayerHandle implements GameObject {
 
   private isWithinBoundsOfHandle(x: number, y: number) {
     const { width, height } = this.board.getSize();
-    return (x - this.position.x * width) ** 2 + (y - this.position.y * height) ** 2 <= HANDLE_RADIUS * width ** 2;
+    return Math.sqrt((x - this.position.x * width) ** 2 + (y - this.position.y * height) ** 2) <= HANDLE_RADIUS * width;
   }
 
   private drawHandle() {
