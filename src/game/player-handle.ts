@@ -1,7 +1,7 @@
 import Board, { BroadcastHandle, GameObject, Position } from './board';
 import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
 
-type TouchClick = Event & TouchEvent;
+type ClientPos = MouseEvent | Touch;
 
 export default class PlayerHandle implements GameObject {
   private board: Board;
@@ -20,27 +20,13 @@ export default class PlayerHandle implements GameObject {
 
   private setEventListeners(): void {
     const canvas = this.board.getCanvas();
-    const { width, height } = this.board.getSize();
 
-    canvas.addEventListener('touchstart', event => this.onStart(event, canvas));
-
-    canvas.addEventListener('touchmove', event => {
-      event.preventDefault();
-      const { left, top } = canvas.getBoundingClientRect();
-
-      if (this.isDragging) {
-        const touch = event.targetTouches[0];
-
-        this.position = { x: (touch.clientX - left) / width, y: (touch.clientY - top) / height };
-        this.broadcastHandle(this.position);
-        this.drawHandle();
-      }
-    });
-
-    canvas.addEventListener('touchend', event => {
-      event.preventDefault();
-      this.isDragging = false;
-    });
+    canvas.addEventListener('touchstart', event => this.onStart(event.targetTouches[0], canvas));
+    canvas.addEventListener('mousedown', event => this.onStart(event, canvas));
+    canvas.addEventListener('touchmove', event => this.onMove(event.targetTouches[0], canvas));
+    canvas.addEventListener('mousemove', event => this.onMove(event, canvas));
+    canvas.addEventListener('touchend', this.onEnd);
+    canvas.addEventListener('mouseup', this.onEnd);
   }
 
   public update(position: Position): void {
@@ -51,17 +37,33 @@ export default class PlayerHandle implements GameObject {
     this.drawHandle();
   }
 
-  private onStart(event: TouchClick, canvas: HTMLCanvasElement) {
-    event.preventDefault();
+  private onStart(event: ClientPos, canvas: HTMLCanvasElement) {
     const { left, top } = canvas.getBoundingClientRect();
 
-    const touch = event?.targetTouches[0] || event;
-    console.log(this.position);
-    console.log(touch.clientX - left, touch.clientY - top);
-
-    if (this.isWithinBoundsOfHandle(touch.clientX - left, touch.clientY - top)) {
+    if (this.isWithinBoundsOfHandle(event.clientX - left, event.clientY - top)) {
+      console.log('ON START', event);
       this.isDragging = true;
     }
+  }
+
+  private onMove(event: ClientPos, canvas: HTMLCanvasElement) {
+    const { left, top } = canvas.getBoundingClientRect();
+    const { width, height } = this.board.getSize();
+
+    if (this.isDragging) {
+      console.log('IS MOVING', this.isDragging);
+
+      this.position = { x: (event.clientX - left) / width, y: (event.clientY - top) / height };
+      this.broadcastHandle(this.position);
+      this.drawHandle();
+    }
+  }
+
+  private onEnd(event: Event) {
+    console.log('ON END', event);
+
+    this.isDragging = false;
+    console.log('NOW WE SHOULD HAVE SET IT', this.isDragging);
   }
 
   private isWithinBoundsOfHandle(x: number, y: number) {
