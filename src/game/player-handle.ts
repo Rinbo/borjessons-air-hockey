@@ -65,7 +65,6 @@ export default class PlayerHandle implements GameObject {
     const ctx = this.board.getContext();
     const { width, height } = this.board.getCanvas();
 
-    //ctx.clearRect(0, 0, width, height);
     ctx.beginPath();
     ctx.arc(this.position.x * width, this.position.y * height, HANDLE_RADIUS * width, 0, 2 * Math.PI);
     ctx.fill();
