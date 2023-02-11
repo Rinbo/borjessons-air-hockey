@@ -9,7 +9,7 @@ const PLAYERS: Player[] = [
   { username: 'Lars', agency: 'PLAYER_2', ready: true }
 ];
 
-const FPS = 30;
+const FPS = 60;
 type Speed = { x: number; y: number };
 type Position = Speed;
 

@@ -15,7 +15,7 @@ export default class PlayerHandle implements GameObject {
     this.isDragging = false;
     this.position = PLAYER_HANDLE_START_POS;
     this.draw();
-    this.setEventListeners();
+    //this.setEventListeners();
   }
 
   public setEventListeners(): void {
@@ -25,8 +25,8 @@ export default class PlayerHandle implements GameObject {
     canvas.addEventListener('mousedown', event => this.onStart(event, canvas));
     canvas.addEventListener('touchmove', event => this.onMove(event.targetTouches[0], canvas));
     canvas.addEventListener('mousemove', event => this.onMove(event, canvas));
-    canvas.addEventListener('touchend', this.onEnd);
-    canvas.addEventListener('mouseup', this.onEnd);
+    canvas.addEventListener('touchend', () => (this.isDragging = false));
+    canvas.addEventListener('mouseup', () => (this.isDragging = false));
   }
 
   public update(position: Position): void {
@@ -41,7 +41,6 @@ export default class PlayerHandle implements GameObject {
     const { left, top } = canvas.getBoundingClientRect();
 
     if (this.isWithinBoundsOfHandle(event.clientX - left, event.clientY - top)) {
-      console.log('ON START', this.isDragging);
       this.isDragging = true;
     }
   }
@@ -50,21 +49,11 @@ export default class PlayerHandle implements GameObject {
     const { left, top } = canvas.getBoundingClientRect();
     const { width, height } = this.board.getSize();
 
-    console.log('IS MOVING BEFORE DRAGGING', this.isDragging);
     if (this.isDragging) {
-      console.log('IS MOVING IN DRAGGING', this.isDragging);
-
       this.position = { x: (event.clientX - left) / width, y: (event.clientY - top) / height };
       this.broadcastHandle(this.position);
       this.drawHandle();
     }
-  }
-
-  private onEnd(event: Event) {
-    console.log('ON END', this.isDragging);
-
-    this.isDragging = false;
-    console.log('NOW WE SHOULD HAVE SET IT', this.isDragging);
   }
 
   private isWithinBoundsOfHandle(x: number, y: number) {
