@@ -31,6 +31,7 @@ export default class Board {
 
   public draw(): void {
     this.ctx.clearRect(0, 0, this.size.width, this.size.height);
+    this.centerLine();
     [this.playerHandle, this.opponentHandle].map(e => e.draw());
   }
 
@@ -47,8 +48,6 @@ export default class Board {
   }
 
   public setSize(size: Size): void {
-    console.log('SET SIZE IS CALLED', size);
-
     this.size = size;
     this.playerHandle.update(PLAYER_HANDLE_START_POS);
     this.opponentHandle.update(OPPONENT_HANDLE_START_POS);
@@ -59,5 +58,14 @@ export default class Board {
 
   public getSize(): Size {
     return this.size;
+  }
+
+  private centerLine() {
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = 'rgb(0,0,0,0.5)';
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, this.canvas.height / 2);
+    this.ctx.lineTo(this.canvas.width, this.canvas.height / 2);
+    this.ctx.stroke();
   }
 }

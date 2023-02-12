@@ -16,10 +16,10 @@ export function useWindowSize() {
 
   useLayoutEffect(() => {
     function updateSize() {
-      const width = Math.min(window.innerWidth, MAX_WIDTH);
+      const width = Math.min(window.innerWidth, MAX_WIDTH) - MARGIN;
       const height = width * ASPECT_RATIO;
-      if (height + 48 + 20 >= window.innerHeight) {
-        const maxHeight = window.innerHeight - 48 - 20 - MARGIN;
+      if (height + BANNER_HEIGHTS >= window.innerHeight) {
+        const maxHeight = window.innerHeight - BANNER_HEIGHTS - MARGIN;
         setSize([maxHeight / ASPECT_RATIO, maxHeight]);
       } else {
         setSize([width, height]);
