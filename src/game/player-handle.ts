@@ -47,8 +47,8 @@ export default class PlayerHandle implements GameObject {
   private onMove(event: ClientEvent) {
     if (this.isDragging) {
       this.position = this.normalizePosition(this.getCanvasOffset(event));
-      this.broadcastHandle(this.position);
       this.drawHandle();
+      this.broadcastHandle(this.position);
     }
   }
 

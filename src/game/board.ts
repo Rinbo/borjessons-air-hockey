@@ -1,6 +1,7 @@
 import { OPPONENT_HANDLE_START_POS, PLAYER_HANDLE_START_POS } from './constants';
 import OpponentHandle from './opponent-handle';
 import PlayerHandle from './player-handle';
+import Puck from './puck';
 
 type Size = { width: number; height: number };
 
@@ -19,6 +20,7 @@ export default class Board {
   private ctx: CanvasRenderingContext2D;
   private opponentHandle: OpponentHandle;
   private playerHandle: PlayerHandle;
+  private puck: Puck;
   private size: Size = { width: 350, height: 560 };
 
   constructor(canvas: HTMLCanvasElement, size: Size, broadcastHandle: BroadcastHandle) {
@@ -26,13 +28,14 @@ export default class Board {
     this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     this.opponentHandle = new OpponentHandle(this);
     this.playerHandle = new PlayerHandle(this, broadcastHandle);
+    this.puck = new Puck(this);
     this.size = size;
   }
 
   public draw(): void {
     this.ctx.clearRect(0, 0, this.size.width, this.size.height);
     this.centerLine();
-    [this.playerHandle, this.opponentHandle].map(e => e.draw());
+    [this.playerHandle, this.opponentHandle, this.puck].map(e => e.draw());
   }
 
   public getCanvas(): HTMLCanvasElement {
@@ -45,6 +48,7 @@ export default class Board {
 
   public update(broadcastState: BroadcastState): void {
     this.opponentHandle.update(broadcastState.opponent);
+    this.puck.update(broadcastState.puck);
   }
 
   public setSize(size: Size): void {
