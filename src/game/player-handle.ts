@@ -1,5 +1,5 @@
 import Board, { BroadcastHandle, GameObject, Position } from './board';
-import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
+import { UPDATE_RATE, HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
 
 type ClientEvent = MouseEvent | Touch;
 
@@ -8,12 +8,14 @@ export default class PlayerHandle implements GameObject {
   private broadcastHandle: BroadcastHandle;
   private isDragging: boolean;
   private position: Position;
+  private tick: number;
 
   constructor(board: Board, broadcastHandle: BroadcastHandle) {
     this.board = board;
     this.broadcastHandle = broadcastHandle;
     this.isDragging = false;
     this.position = PLAYER_HANDLE_START_POS;
+    this.tick = UPDATE_RATE;
     this.draw();
   }
 
@@ -48,8 +50,20 @@ export default class PlayerHandle implements GameObject {
     if (this.isDragging) {
       this.position = this.normalizePosition(this.getCanvasOffset(event));
       this.drawHandle();
-      this.broadcastHandle(this.position);
+      this.broadcastPosition();
     }
+  }
+
+  private broadcastPosition() {
+    if (this.tick === UPDATE_RATE) {
+      this.broadcastHandle(this.position);
+      this.tick = 0;
+      console.log('I am updating');
+
+      return;
+    }
+    console.log(this.tick);
+    this.tick++;
   }
 
   private isWithinBoundsOfHandle(x: number, y: number) {
