@@ -1,7 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
+import { ASPECT_RATIO, MAX_WIDTH } from '../game/constants';
 
-const ASPECT_RATIO = 1.6;
-const MAX_WIDTH = 500;
 const BANNER_HEIGHTS = 68; // {@link Banner} {@link ScoreBanner}
 const MARGIN = 10;
 
@@ -17,10 +16,10 @@ export function useWindowSize() {
   useLayoutEffect(() => {
     function updateSize() {
       const width = Math.min(window.innerWidth, MAX_WIDTH) - MARGIN;
-      const height = width * ASPECT_RATIO;
+      const height = width / ASPECT_RATIO;
       if (height + BANNER_HEIGHTS >= window.innerHeight) {
         const maxHeight = window.innerHeight - BANNER_HEIGHTS - MARGIN;
-        setSize([maxHeight / ASPECT_RATIO, maxHeight]);
+        setSize([maxHeight * ASPECT_RATIO, maxHeight]);
       } else {
         setSize([width, height]);
       }

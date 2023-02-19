@@ -24,7 +24,7 @@ export default class Puck implements GameObject {
     const { width, height } = this.board.getCanvas();
 
     ctx.beginPath();
-    ctx.arc(this.position.x * width, this.position.y * height, PUCK_RADIUS * width, 0, 2 * Math.PI);
+    ctx.arc(this.position.x * width, this.position.y * height, PUCK_RADIUS.x * width, 0, 2 * Math.PI);
     ctx.fill();
   }
 }

@@ -7,6 +7,7 @@ type Size = { width: number; height: number };
 
 export type BroadcastState = { opponent: Position; puck: Position };
 export type Position = { x: number; y: number };
+export type Radius = Position;
 
 export interface GameObject {
   update: (position: Position) => void;

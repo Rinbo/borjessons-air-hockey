@@ -58,17 +58,14 @@ export default class PlayerHandle implements GameObject {
     if (this.tick === UPDATE_RATE) {
       this.broadcastHandle(this.position);
       this.tick = 0;
-      console.log('I am updating');
-
       return;
     }
-    console.log(this.tick);
     this.tick++;
   }
 
   private isWithinBoundsOfHandle(x: number, y: number) {
     const { width, height } = this.board.getSize();
-    return Math.sqrt((x - this.position.x * width) ** 2 + (y - this.position.y * height) ** 2) <= HANDLE_RADIUS * width;
+    return Math.sqrt((x - this.position.x * width) ** 2 + (y - this.position.y * height) ** 2) <= HANDLE_RADIUS.x * width;
   }
 
   private drawHandle() {
@@ -76,7 +73,7 @@ export default class PlayerHandle implements GameObject {
     const { width, height } = this.board.getCanvas();
 
     ctx.beginPath();
-    ctx.arc(this.position.x * width, this.position.y * height, HANDLE_RADIUS * width, 0, 2 * Math.PI);
+    ctx.arc(this.position.x * width, this.position.y * height, HANDLE_RADIUS.x * width, 0, 2 * Math.PI);
     ctx.fill();
   }
 
@@ -93,11 +90,9 @@ export default class PlayerHandle implements GameObject {
   private normalizePosition(postion: Position): Position {
     const { width, height } = this.board.getSize();
 
-    const handleRadiusRelativeToHeight = (width * HANDLE_RADIUS) / height;
+    const xRel = Math.max(HANDLE_RADIUS.x, postion.x / width);
+    const yRel = Math.max(0.5 + HANDLE_RADIUS.y, postion.y / height);
 
-    const xRel = Math.max(HANDLE_RADIUS, postion.x / width);
-    const yRel = Math.max(0.5 + handleRadiusRelativeToHeight, postion.y / height);
-
-    return { x: Math.min(1 - HANDLE_RADIUS, xRel), y: Math.min(1 - handleRadiusRelativeToHeight, yRel) };
+    return { x: Math.min(1 - HANDLE_RADIUS.x, xRel), y: Math.min(1 - HANDLE_RADIUS.y, yRel) };
   }
 }
