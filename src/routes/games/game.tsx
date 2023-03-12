@@ -6,11 +6,7 @@ import { useWindowSize } from '../../hooks/useWindowSize';
 import { Player } from './game-container';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { getAgencyExtention } from '../../game/utils';
-
-const PLAYERS: Player[] = [
-  { username: 'Robin', agency: 'PLAYER_1', ready: true },
-  { username: 'Lars', agency: 'PLAYER_2', ready: true }
-];
+import { GAME_DURATION } from '../../game/constants';
 
 const FPS = 60;
 type Speed = { x: number; y: number };
@@ -31,6 +27,7 @@ export default function Game({ stompClient, players }: Props) {
   const [width, height] = useWindowSize();
   const boardRef = React.useRef<Board>();
   const { username } = useOutletContext<{ username: string }>();
+  const [remainingSeconds, setRemainingSeconds] = React.useState<number>(GAME_DURATION);
 
   React.useEffect(() => {
     const canvas = document.getElementById('game-board') as HTMLCanvasElement;
@@ -38,7 +35,9 @@ export default function Game({ stompClient, players }: Props) {
     boardRef.current = board;
 
     stompClient.subscribe(`/topic/game/${id}/board-state/${getAgencyExtention(players, username)}`, (message: Stomp.Message) => {
-      board.update(JSON.parse(message.body) as BroadcastState);
+      const state = JSON.parse(message.body) as BroadcastState;
+      setRemainingSeconds(state.remainingSeconds);
+      board.update(state);
       board.draw();
     });
   }, []);
@@ -49,7 +48,7 @@ export default function Game({ stompClient, players }: Props) {
 
   return (
     <div className="m-0 flex h-screen flex-col items-center justify-center overflow-hidden pt-5">
-      <ScoreBanner players={players} width={width} />
+      <ScoreBanner players={players} width={width} remainingSeconds={remainingSeconds} />
       <canvas className="rounded-xl border-2 border-slate-500 bg-white bg-opacity-20 backdrop-blur-lg" id="game-board" width={width} height={height} />
     </div>
   );

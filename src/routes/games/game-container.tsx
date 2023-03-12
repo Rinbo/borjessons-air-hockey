@@ -14,7 +14,7 @@ enum GameState {
 
 export type Agent = 'PLAYER_1' | 'PLAYER_2';
 export type Message = { username: string; message: string; datetime: Date };
-export type Player = { username: string; agency: Agent; ready: boolean };
+export type Player = { username: string; agency: Agent; ready: boolean; score: number };
 
 /**
  * Need some kind of state machine for transitions between states.
