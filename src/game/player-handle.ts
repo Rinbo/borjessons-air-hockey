@@ -1,5 +1,6 @@
 import Board, { BroadcastHandle, GameObject, Position } from './board';
 import { UPDATE_RATE, HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
+import { createHandleGradient } from './utils';
 
 type ClientEvent = MouseEvent | Touch;
 
@@ -74,6 +75,7 @@ export default class PlayerHandle implements GameObject {
 
     ctx.beginPath();
     ctx.arc(this.position.x * width, this.position.y * height, HANDLE_RADIUS.x * width, 0, 2 * Math.PI);
+    ctx.fillStyle = createHandleGradient(ctx, this.position.x * width, this.position.y * height, HANDLE_RADIUS.x * width);
     ctx.fill();
   }
 

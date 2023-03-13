@@ -13,3 +13,12 @@ export function getAgencyExtention(players: Player[], username: string): string 
       throw new Error();
   }
 }
+
+export function createHandleGradient(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) {
+  const gradient = ctx.createRadialGradient(x, y, radius * 0.4, x, y, radius);
+  gradient.addColorStop(0.0, '#575757');
+  gradient.addColorStop(0.7, '#303030');
+  gradient.addColorStop(0.9, '#7e7e7e');
+  gradient.addColorStop(1.0, '#1c1c1c');
+  return gradient;
+}
