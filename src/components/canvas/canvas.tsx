@@ -10,9 +10,6 @@ const Canvas: React.FC<Props> = ({ canvasRef }) => {
   const [width, setWidth] = React.useState<number>(0);
   const [height, setHeight] = React.useState<number>(0);
 
-  console.log(window.innerWidth, 'window width');
-  console.log(window.innerHeight, 'window height');
-
   React.useEffect(() => {
     if (typeof ResizeObserver === 'undefined') return;
 
@@ -41,7 +38,7 @@ const Canvas: React.FC<Props> = ({ canvasRef }) => {
 
   return (
     <React.Fragment>
-      <div style={{ width }} className="bg-slate-300 h-12"></div>
+      <div style={{ width }} className="h-12 bg-slate-300"></div>
       <canvas className="border border-black" ref={canvasRef} />
     </React.Fragment>
   );

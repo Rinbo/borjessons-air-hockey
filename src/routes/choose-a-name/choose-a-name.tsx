@@ -19,15 +19,15 @@ export default function ChooseAName() {
   };
 
   return (
-    <div className="flex h-screen justify-center items-center">
+    <div className="flex h-screen items-center justify-center">
       <Banner />
-      <div className="flex flex-col gap-4 m-2 w-full sm:max-w-sm items-center bg-bg border-2 border-primary rounded-lg p-4 text-primary shadow-xl shadow-primary">
-        <div className="font-bold text-xl">Choose a name</div>
+      <div className="m-2 flex w-full flex-col items-center gap-4 rounded-lg border-2 border-primary bg-bg p-4 text-primary shadow-xl shadow-primary sm:max-w-sm">
+        <div className="text-xl font-bold">Choose a name</div>
         <TsForm
           schema={NameSchema}
           onSubmit={onSubmit}
           renderAfter={() => (
-            <button className="btn btn-primary w-full mt-2" type="submit" onKeyDown={e => (e.key === 'Enter' ? onSubmit : null)}>
+            <button className="btn btn-primary mt-2 w-full" type="submit" onKeyDown={e => (e.key === 'Enter' ? onSubmit : null)}>
               Save
             </button>
           )}
