@@ -10,6 +10,7 @@ import './css/index.css';
 import AvailableGames from './routes/games/available-games';
 import GameContainer from './routes/games/game-container';
 import TestGame from './routes/games/test-game';
+import { OnlineUsers } from './routes/games/online-users';
 
 const router = createBrowserRouter([
   {
@@ -17,10 +18,7 @@ const router = createBrowserRouter([
     element: <LandingPage />,
     errorElement: <ErrorPage />
   },
-  {
-    path: '/online',
-    element: <h1 className="pt-8 text-center text-3xl">Online Users</h1>
-  },
+
   {
     path: '/choose-a-name',
     element: <ChooseAName />
@@ -32,7 +30,8 @@ const router = createBrowserRouter([
       { index: true, element: <AvailableGames /> },
       { path: 'new', element: <GenerateRoom /> },
       { path: ':id', element: <GameContainer /> },
-      { path: 'test', element: <TestGame /> }
+      { path: 'test', element: <TestGame /> },
+      { path: 'online', element: <OnlineUsers /> }
     ]
   }
 ]);

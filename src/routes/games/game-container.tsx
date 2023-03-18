@@ -76,7 +76,7 @@ export default function GameContainer() {
     return JSON.stringify({ username, message });
   }
 
-  function renderCentralMessageAction(message: string, actionName: string, action: () => void): React.ReactNode {
+  function renderCentralMessageAction(message: string, actionName: string, action: () => void) {
     return (
       <CenterWrapper>
         <div className="text-xl font-bold">{message}</div>
@@ -123,10 +123,7 @@ export default function GameContainer() {
     case GameState.PLAYER_1_DISCONNECT:
       return renderCentralMessageAction('Game creator left', 'Exit', () => navigate('/'));
     case GameState.PLAYER_2_DISCONNECT:
-      return renderCentralMessageAction('Your opponent left the game', 'Back to lobby', () => {
-        setPlayers(prevState => prevState);
-        setGameState(GameState.LOBBY);
-      });
+      return renderCentralMessageAction('Your opponent left the game', 'Back to lobby', () => setGameState(GameState.LOBBY));
     case GameState.LOBBY:
       return <Lobby sendMessage={sendMessage} messages={messages} players={players} toggleReady={toggleReady} />;
     case GameState.FORBIDDEN:
