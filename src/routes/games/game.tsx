@@ -14,14 +14,6 @@ type Position = Speed;
 
 type Props = { stompClient: Stomp.Client; players: Player[] };
 
-/**
- * Need handler for sending player handle position on handle move. Need reportStartPosition to be reported on first draw.
- * Board needs a callback from game-container to do this update. Frontend needs a transformer to convert handle position to percentage
- * based on its individual width and height. IS IT POSSIBLE TO TRIGGER DRAW, AND MOVE without animation frame? Require server to do the
- * redrawing? It will update puck state 60 times per second. Mouse or touch coordinates will then be rendered as a result of the
- * server tick? This will be harder to program for sure, but probably be more performant. And a lot of fun I think :)
- * Let's get to it! Begin by making the server interfaces, and ticker.
- */
 export default function Game({ stompClient, players }: Props) {
   const { id } = useParams<string>();
   const [width, height] = useWindowSize();

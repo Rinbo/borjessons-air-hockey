@@ -21,7 +21,7 @@ body {
 }
 
 .btn-orange-outlined {
-  @apply border-2 border-orange-500 text-primary;
+  @apply border border-orange-500 text-primary;
 }
 
 .btn-primary:hover {
@@ -34,4 +34,27 @@ body {
 
 .btn-orange-outlined:hover {
   @apply hover:border-orange-300 hover:bg-orange-300;
+}
+
+.animate-grow-shrink {
+  animation: grow-shrink 3s ease-in-out forwards;
+}
+
+@keyframes grow-shrink {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  10% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  90% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
 }

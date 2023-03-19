@@ -4,6 +4,8 @@ import shareIcon from '../../assets/svg/share.svg';
 import sendIcon from '../../assets/svg/send.svg';
 import { Message, Player } from './game-container';
 import { formatTime } from '../../utils/time-utils';
+import { useNavigate } from 'react-router-dom';
+import CopyUrlButton from '../../components/buttons/copy-link-button';
 
 type Props = {
   sendMessage: (message: string) => void;
@@ -15,6 +17,7 @@ type Props = {
 export default function Lobby({ sendMessage, messages, players, toggleReady }: Props) {
   const [message, setMessage] = React.useState<string>('');
   const [isReady, setIsReady] = React.useState<boolean>(false);
+  const navigate = useNavigate();
 
   function handleSendMessage() {
     sendMessage(message);
@@ -51,8 +54,11 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
             </div>
           </div>
           <div className="flex gap-2">
-            <IconButton text="" onClick={() => console.log('share')} className="border border-primary" svgIcon={shareIcon} />
-            <button className="btn btn-orange-outlined w-20">Exit</button>
+            {/* <IconButton text="" onClick={() => console.log('share')} className="border border-primary" svgIcon={shareIcon} /> */}
+            <CopyUrlButton />
+            <button className="btn btn-orange-outlined w-20" onClick={() => navigate('/')}>
+              Exit
+            </button>
           </div>
         </div>
         <div className="flex flex-1 flex-col-reverse overflow-y-scroll rounded-md border-2 border-primary border-opacity-50 bg-slate-100 p-2">
