@@ -1,7 +1,6 @@
 import React from 'react';
-import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import Lobby from './lobby';
-import SockJS from 'sockjs-client/dist/sockjs';
 import Stomp from 'stompjs';
 import Game from './game';
 import CenterWrapper from '../../components/misc/center-wrapper';
@@ -28,40 +27,29 @@ export default function GameContainer() {
   const [gameState, setGameState] = React.useState<GameState>(GameState.LOBBY);
   const [messages, setMessages] = React.useState<Array<Message>>([]);
   const [players, setPlayers] = React.useState<Array<Player>>([]);
-  const [stompClient, setStompClient] = React.useState<Stomp.Client | null>();
-  const { username } = useOutletContext<{ username: string }>();
+  const { username, stompClient } = useOutletContext<{ username: string; stompClient: Stomp.Client }>();
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    const socket = new SockJS('http://localhost:8080/ws');
-    const client = Stomp.over(socket);
+    stompClient.send(`/app/game/${id}/connect`, {}, createMessage(''));
 
-    client.connect({}, _frame => {
-      setStompClient(client);
-
-      client.send(`/app/game/${id}/connect`, {}, createMessage(''));
-
-      client.subscribe(`/topic/game/${id}/chat`, (message: Stomp.Message) => {
-        setMessages(prev => [{ ...JSON.parse(message.body), datetime: new Date() }, ...prev]);
-      });
-
-      client.subscribe(`/topic/game/${id}/players`, (message: Stomp.Message) => {
-        setPlayers(JSON.parse(message.body) as Array<Player>);
-      });
-
-      client.subscribe(`/topic/game/${id}/game-state`, (message: Stomp.Message) => {
-        setGameState(JSON.parse(message.body) as GameState);
-      });
-
-      client.subscribe(`/topic/game/${username}/game-state`, (message: Stomp.Message) => {
-        setGameState(JSON.parse(message.body) as GameState);
-      });
+    stompClient.subscribe(`/topic/game/${id}/chat`, (message: Stomp.Message) => {
+      setMessages(prev => [{ ...JSON.parse(message.body), datetime: new Date() }, ...prev]);
     });
 
-    return () => {
-      client.send(`/app/game/${id}/disconnect`, {});
-      client.disconnect(() => console.log('disconnecting...'));
-    };
+    stompClient.subscribe(`/topic/game/${id}/players`, (message: Stomp.Message) => {
+      setPlayers(JSON.parse(message.body) as Array<Player>);
+    });
+
+    stompClient.subscribe(`/topic/game/${id}/game-state`, (message: Stomp.Message) => {
+      setGameState(JSON.parse(message.body) as GameState);
+    });
+
+    stompClient.subscribe(`/topic/game/${username}/game-state`, (message: Stomp.Message) => {
+      setGameState(JSON.parse(message.body) as GameState);
+    });
+
+    return () => stompClient.send(`/app/game/${id}/disconnect`, {});
   }, []);
 
   const sendMessage = (message: string): void => {

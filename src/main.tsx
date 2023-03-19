@@ -26,6 +26,7 @@ const router = createBrowserRouter([
   {
     path: '/games',
     element: <GamesLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <AvailableGames /> },
       { path: 'new', element: <GenerateRoom /> },
