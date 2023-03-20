@@ -11,23 +11,24 @@ export default function GamesLayout() {
   React.useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
     const client = Stomp.over(socket);
-
-    client.connect({}, _frame => {
-      console.info('Websocket connection established');
-      setStompClient(client);
-    });
+    client.connect({}, _frame => setStompClient(client));
   }, []);
 
-  if (!stompClient)
-    return (
-      <div className="flex items-center justify-center">
-        <div className="text-lg font-bold">Connecting...</div>
-      </div>
-    );
+  // TODO rename username from localStorage to savedUsername. If it is not set then forward to set-name component
+  // If it is set (meaning we were redirected back here) then first validate, enter via websocket and then set state username which also cannot be null
+  React.useEffect(() => {
+    stompClient && username && stompClient.send('/app/enter', {}, username);
+    return () => stompClient && username && stompClient.send('/app/exit', {}, username);
+  }, [username]);
 
-  if (!username) {
-    return <Navigate to="/choose-a-name" state={{ from: location.pathname }} replace />;
-  }
+  const renderConnecting = (
+    <div className="flex items-center justify-center">
+      <div className="text-lg font-bold">Connecting...</div>
+    </div>
+  );
+
+  if (!stompClient) return renderConnecting;
+  if (!username) return <Navigate to="/choose-a-name" state={{ from: location.pathname }} replace />;
 
   return (
     <React.Fragment>

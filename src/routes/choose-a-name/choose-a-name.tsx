@@ -14,6 +14,7 @@ export default function ChooseAName() {
   const from = location.state?.from || '/';
 
   const onSubmit = (data: z.infer<typeof NameSchema>) => {
+    // TODO send to backend to check if it is taken. If it is ask them to provide another. Then set in local storage and redirect
     localStorage.setItem('username', data.name);
     navigate(from, { replace: true });
   };
