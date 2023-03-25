@@ -52,7 +52,7 @@ export async function put<T>(path: string, data: T): Promise<T> {
 function getRequestOptions<T>(httpMethod: HttpMethod, data?: T): RequestOptions {
   return {
     method: httpMethod,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: data ? JSON.stringify(data) : undefined
   };
 }

@@ -19,14 +19,23 @@ export default function GamesLayout() {
   }, []);
 
   React.useEffect(() => {
+    const cleanup = () => stompClient && username && stompClient.send('/app/users/exit', {}, username);
+
+    const cleanupOnUnmount = () => {
+      cleanup();
+      window.removeEventListener('beforeunload', cleanup);
+    };
+
+    window.addEventListener('beforeunload', cleanup);
+
     savedUsername &&
       get<string>(`/users/${savedUsername}/validate`).then(data => {
         console.log(data, 'Received validated username');
         setUsername(data);
-        stompClient && stompClient.send('/app/enter', {}, data);
+        stompClient && stompClient.send('/app/users/enter', {}, data);
       });
 
-    return () => stompClient && username && stompClient.send('/app/exit', {}, username);
+    return cleanupOnUnmount;
   }, [stompClient]);
 
   const renderConnecting = (
