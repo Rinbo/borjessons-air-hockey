@@ -1,33 +1,38 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { get } from '../../api/api';
 
-type Row = { id: string; username: string; joinable: boolean };
+type Game = { gameId: string; username: string; joinable: boolean };
 
 const DUMMY_DATA = [
-  { id: '12', username: 'Albin', joinable: true },
-  { id: '34', username: 'Sixten', joinable: false },
-  { id: '56', username: 'Robin', joinable: true },
-  { id: '78', username: 'Maria', joinable: false },
-  { id: '10', username: 'Rolf', joinable: true }
-] as Array<Row>;
+  { gameId: '12', username: 'Albin', joinable: true },
+  { gameId: '34', username: 'Sixten', joinable: false },
+  { gameId: '56', username: 'Robin', joinable: true },
+  { gameId: '78', username: 'Maria', joinable: false },
+  { gameId: '10', username: 'Rolf', joinable: true }
+] as Array<Game>;
 
 export default function AvailableGames() {
   const navigate = useNavigate();
-  const [games, setGames] = React.useState<Array<Row>>(DUMMY_DATA);
+  const [games, setGames] = React.useState<Array<Game>>([]);
+
+  React.useEffect(() => {
+    get<Game[]>('/games').then(data => setGames(data));
+  }, []);
 
   function renderAvailableGames() {
     return games
       .filter(game => game.joinable)
-      .map(row => {
+      .map(game => {
         return (
           <div
-            key={row.id}
+            key={game.gameId}
             className="flex items-center justify-between rounded-md border-black bg-slate-300 px-3 py-2 duration-300 hover:scale-105 hover:transform hover:border hover:bg-teal-100"
           >
-            <span className="font-bold">{`${row.username}'s game`}</span>
+            <span className="font-bold">{`${game.username}'s game`}</span>
             <button
               className="btn border border-primary bg-teal-200 text-primary hover:bg-teal-300 hover:text-white"
-              onClick={() => navigate('/games/' + row.id)}
+              onClick={() => navigate('/games/' + game.gameId)}
             >
               Join
             </button>
@@ -51,7 +56,7 @@ export default function AvailableGames() {
       .filter(game => !game.joinable)
       .map(row => {
         return (
-          <div key={row.id} className="flex items-center justify-between rounded-md border-black bg-slate-300 px-3 py-2">
+          <div key={row.gameId} className="flex items-center justify-between rounded-md border-black bg-slate-300 px-3 py-2">
             <span className="font-bold">{`${row.username}'s game`}</span>
             <button className="btn cursor-not-allowed border border-primary bg-red-300">In progress</button>
           </div>
