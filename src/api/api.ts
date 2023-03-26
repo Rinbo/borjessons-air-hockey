@@ -20,7 +20,11 @@ export async function get<T>(path: string): Promise<T> {
     throw statusError(response.status);
   }
 
-  return await response.json();
+  const data = await response.json();
+
+  console.log('data', data);
+
+  return data;
 }
 
 export async function post<T>(path: string, data: T): Promise<T> {

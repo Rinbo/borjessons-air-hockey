@@ -40,7 +40,7 @@ const router = createBrowserRouter([
 document.cookie = `SameSite=None;Secure`;
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <div className="h-min w-screen bg-bg text-primary">
+  <div className="h-screen w-screen bg-bg text-primary">
     <RouterProvider router={router} />
   </div>
 );
