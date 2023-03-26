@@ -22,3 +22,10 @@ export function createHandleGradient(ctx: CanvasRenderingContext2D, x: number, y
   gradient.addColorStop(1.0, '#1c1c1c');
   return gradient;
 }
+
+export function createPuckGradient(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) {
+  const gradient = ctx.createRadialGradient(x, y, radius * 0.4, x, y, radius);
+  gradient.addColorStop(0.8, '#333344');
+  gradient.addColorStop(1.0, '#111111');
+  return gradient;
+}

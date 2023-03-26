@@ -1,6 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { get } from '../../api/api';
+import Stomp from 'stompjs';
 
 type Game = { gameId: string; username: string; joinable: boolean };
 
@@ -15,9 +16,17 @@ const DUMMY_DATA = [
 export default function AvailableGames() {
   const navigate = useNavigate();
   const [games, setGames] = React.useState<Array<Game>>([]);
+  const { stompClient } = useOutletContext<{ stompClient: Stomp.Client }>();
 
   React.useEffect(() => {
     get<Game[]>('/games').then(data => setGames(data));
+
+    stompClient.subscribe('/topic/games', (message: Stomp.Message) => {
+      const newLocal = JSON.parse(message.body);
+      console.log(newLocal, 'HELLOOOOLLOOLLOLOO');
+
+      setGames(newLocal);
+    });
   }, []);
 
   function renderAvailableGames() {

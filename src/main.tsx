@@ -24,6 +24,10 @@ const router = createBrowserRouter([
     element: <ChooseAName />
   },
   {
+    path: '/test',
+    element: <TestGame />
+  },
+  {
     path: '/games',
     element: <GamesLayout />,
     errorElement: <ErrorPage />,
@@ -31,7 +35,6 @@ const router = createBrowserRouter([
       { index: true, element: <AvailableGames /> },
       { path: 'new', element: <GenerateRoom /> },
       { path: ':id', element: <GameContainer /> },
-      { path: 'test', element: <TestGame /> },
       { path: 'online', element: <OnlineUsers /> }
     ]
   }

@@ -5,8 +5,8 @@ import { useWindowSize } from '../../hooks/useWindowSize';
 import { Player } from './game-container';
 
 const PLAYERS: Player[] = [
-  { username: 'Robin', agency: 'PLAYER_1', ready: true },
-  { username: 'Lars', agency: 'PLAYER_2', ready: true }
+  { username: 'Robin', agency: 'PLAYER_1', ready: true, score: 0 },
+  { username: 'Lars', agency: 'PLAYER_2', ready: true, score: 1 }
 ];
 
 const FPS = 60;
@@ -44,7 +44,7 @@ export default function TestGame() {
 
   return (
     <div className="m-0 flex h-screen flex-col items-center justify-center overflow-hidden pt-5">
-      <ScoreBanner players={PLAYERS} width={width} />
+      <ScoreBanner players={PLAYERS} width={width} remainingSeconds={3} />
       <canvas className="rounded-xl border-2 border-slate-500 bg-white bg-opacity-20 backdrop-blur-lg" id="game-board" width={width} height={height} />
     </div>
   );
