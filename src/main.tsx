@@ -12,33 +12,37 @@ import GameContainer from './routes/games/game-container';
 import TestGame from './routes/games/test-game';
 import { OnlineUsers } from './routes/games/online-users';
 
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <LandingPage />,
+      errorElement: <ErrorPage />
+    },
+    {
+      path: '/choose-a-name',
+      element: <ChooseAName />
+    },
+    {
+      path: '/test',
+      element: <TestGame />
+    },
+    {
+      path: '/games',
+      element: <GamesLayout />,
+      errorElement: <ErrorPage />,
+      children: [
+        { index: true, element: <AvailableGames /> },
+        { path: 'new', element: <GenerateRoom /> },
+        { path: ':id', element: <GameContainer /> },
+        { path: 'online', element: <OnlineUsers /> }
+      ]
+    }
+  ],
   {
-    path: '/',
-    element: <LandingPage />,
-    errorElement: <ErrorPage />
-  },
-
-  {
-    path: '/choose-a-name',
-    element: <ChooseAName />
-  },
-  {
-    path: '/test',
-    element: <TestGame />
-  },
-  {
-    path: '/games',
-    element: <GamesLayout />,
-    errorElement: <ErrorPage />,
-    children: [
-      { index: true, element: <AvailableGames /> },
-      { path: 'new', element: <GenerateRoom /> },
-      { path: ':id', element: <GameContainer /> },
-      { path: 'online', element: <OnlineUsers /> }
-    ]
+    basename: '/borjessons-air-hockey'
   }
-]);
+);
 
 document.cookie = `SameSite=None;Secure`;
 
