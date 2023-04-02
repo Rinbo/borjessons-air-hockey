@@ -8,7 +8,7 @@ body {
   font-family: 'Exo', sans-serif;
   overscroll-behavior: none;
   touch-action: manipulation;
-  overscroll-behavior-y: contain;
+  overscroll-behavior: none;
 }
 
 .btn {

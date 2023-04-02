@@ -23,9 +23,9 @@ export default class PlayerHandle implements GameObject {
   public setEventListeners(): void {
     const canvas = this.board.getCanvas();
 
-    canvas.addEventListener('touchstart', event => this.onStart(event.targetTouches[0]));
+    canvas.addEventListener('touchstart', event => this.onStart(event.targetTouches[0]), { passive: false });
     canvas.addEventListener('mousedown', event => this.onStart(event));
-    canvas.addEventListener('touchmove', event => this.onMove(event.targetTouches[0]));
+    canvas.addEventListener('touchmove', event => this.onMove(event.targetTouches[0]), { passive: false });
     canvas.addEventListener('mousemove', event => this.onMove(event));
     canvas.addEventListener('touchend', () => (this.isDragging = false));
     canvas.addEventListener('mouseup', () => (this.isDragging = false));

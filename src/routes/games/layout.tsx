@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import Banner from '../../components/misc/banner';
 import SockJS from 'sockjs-client/dist/sockjs';
 import Stomp from 'stompjs';
@@ -11,6 +11,7 @@ export default function GamesLayout() {
   const savedUsername = localStorage.getItem('username');
   const [stompClient, setStompClient] = React.useState<Stomp.Client | null>();
   const [username, setUsername] = React.useState<string>();
+  const location = useLocation();
 
   React.useEffect(() => {
     const socket = new SockJS(wsBaseUrl);
