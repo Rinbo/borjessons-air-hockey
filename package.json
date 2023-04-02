@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://rinbo.github.io/borjessons-air-hockey",
   "scripts": {
     "dev": "vite --mode development",
     "build": "tsc && vite build --mode production",

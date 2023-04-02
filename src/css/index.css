@@ -6,6 +6,8 @@
 
 body {
   font-family: 'Exo', sans-serif;
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 .btn {
