@@ -26,8 +26,6 @@ const Canvas: React.FC<Props> = ({ canvasRef }) => {
     return () => observer.disconnect();
   }, []);
 
-  console.log(width, 'ACTUAL WIDTH');
-
   React.useEffect(() => {
     if (canvasRef.current) {
       const canvas = canvasRef.current;

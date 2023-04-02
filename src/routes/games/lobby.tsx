@@ -54,7 +54,6 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
             </div>
           </div>
           <div className="flex gap-2">
-            {/* <IconButton text="" onClick={() => console.log('share')} className="border border-primary" svgIcon={shareIcon} /> */}
             <CopyUrlButton />
             <button className="btn btn-orange-outlined w-20" onClick={() => navigate('/')}>
               Exit

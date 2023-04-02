@@ -22,10 +22,7 @@ export default function AvailableGames() {
     get<Game[]>('/games').then(data => setGames(data));
 
     stompClient.subscribe('/topic/games', (message: Stomp.Message) => {
-      const newLocal = JSON.parse(message.body);
-      console.log(newLocal, 'HELLOOOOLLOOLLOLOO');
-
-      setGames(newLocal);
+      setGames(JSON.parse(message.body));
     });
   }, []);
 
