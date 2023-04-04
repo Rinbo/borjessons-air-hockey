@@ -4,11 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --doc-height: 100%;
+}
+
+html,
 body {
   font-family: 'Exo', sans-serif;
   overscroll-behavior: none;
   touch-action: none;
   touch-action: unset;
+  padding: 0;
+  margin: 0;
+  height: 100vh; /* fallback for Js load */
+  height: var(--doc-height);
 }
 
 .btn {
