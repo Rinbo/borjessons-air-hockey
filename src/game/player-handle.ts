@@ -23,9 +23,9 @@ export default class PlayerHandle implements GameObject {
   public setEventListeners(): void {
     const canvas = this.board.getCanvas();
 
-    canvas.addEventListener('touchstart', event => this.onStart(event.targetTouches[0]), { passive: false });
+    canvas.addEventListener('touchstart', event => this.onTouchStart(event), { passive: false });
     canvas.addEventListener('mousedown', event => this.onStart(event));
-    canvas.addEventListener('touchmove', event => this.onMove(event.targetTouches[0]), { passive: false });
+    canvas.addEventListener('touchmove', event => this.onTouchMove(event), { passive: false });
     canvas.addEventListener('mousemove', event => this.onMove(event));
     canvas.addEventListener('touchend', () => (this.isDragging = false));
     canvas.addEventListener('mouseup', () => (this.isDragging = false));
@@ -35,11 +35,16 @@ export default class PlayerHandle implements GameObject {
     this.position = position;
   }
 
-  public draw() {
+  public draw(): void {
     this.drawHandle();
   }
 
-  private onStart(event: ClientEvent) {
+  private onTouchStart(event: TouchEvent): void {
+    event.preventDefault();
+    this.onStart(event.targetTouches[0]);
+  }
+
+  private onStart(event: ClientEvent): void {
     const { x, y } = this.getCanvasOffset(event);
 
     if (this.isWithinBoundsOfHandle(x, y)) {
@@ -47,7 +52,12 @@ export default class PlayerHandle implements GameObject {
     }
   }
 
-  private onMove(event: ClientEvent) {
+  private onTouchMove(event: TouchEvent): void {
+    event.preventDefault();
+    this.onMove(event.targetTouches[0]);
+  }
+
+  private onMove(event: ClientEvent): void {
     if (this.isDragging) {
       this.position = this.normalizePosition(this.getCanvasOffset(event));
       this.drawHandle();
@@ -55,7 +65,7 @@ export default class PlayerHandle implements GameObject {
     }
   }
 
-  private broadcastPosition() {
+  private broadcastPosition(): void {
     if (this.tick === UPDATE_RATE) {
       this.broadcastHandle(this.position);
       this.tick = 0;
@@ -64,12 +74,12 @@ export default class PlayerHandle implements GameObject {
     this.tick++;
   }
 
-  private isWithinBoundsOfHandle(x: number, y: number) {
+  private isWithinBoundsOfHandle(x: number, y: number): boolean {
     const { width, height } = this.board.getSize();
     return Math.sqrt((x - this.position.x * width) ** 2 + (y - this.position.y * height) ** 2) <= HANDLE_RADIUS.x * width;
   }
 
-  private drawHandle() {
+  private drawHandle(): void {
     const ctx = this.board.getContext();
     const { width, height } = this.board.getCanvas();
 
