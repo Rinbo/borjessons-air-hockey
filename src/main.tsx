@@ -1,4 +1,3 @@
-import React from 'react';
 import { RouterProvider, createHashRouter } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
 import GamesLayout from './routes/games/layout';

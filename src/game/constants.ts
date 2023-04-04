@@ -17,4 +17,4 @@ export const GOAL_HEIGHT = 0.015;
 export const GOAL_ANGLE = 0.03;
 
 /** Game */
-export const GAME_DURATION = 10;
+export const GAME_DURATION = 120;
