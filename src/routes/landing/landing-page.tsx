@@ -9,7 +9,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex h-screen w-full flex-col ">
+    <div className="flex h-full w-full flex-col ">
       <div className="pt-20 text-center text-3xl">borjessons</div>
       <div className="ripple text-center text-6xl font-bold">Air Hockey</div>
 

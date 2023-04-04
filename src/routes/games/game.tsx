@@ -39,7 +39,7 @@ export default function Game({ stompClient, players }: Props) {
   }, [width, height]);
 
   return (
-    <div className="m-0 flex h-screen flex-col items-center justify-center overflow-hidden pt-5">
+    <div className="m-0 flex h-full flex-col items-center justify-center overflow-hidden pt-5">
       <ScoreBanner players={players} width={width} remainingSeconds={remainingSeconds} />
       <canvas className="rounded-xl border-2 border-slate-500 bg-white bg-opacity-20 backdrop-blur-lg" id="game-board" width={width} height={height} />
     </div>

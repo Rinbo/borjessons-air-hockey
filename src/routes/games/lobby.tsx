@@ -37,7 +37,7 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
   }
 
   return (
-    <div className="h-screen px-2 py-4 sm:container sm:mx-auto sm:max-w-3xl">
+    <div className="h-full px-2 py-4 sm:container sm:mx-auto sm:max-w-3xl">
       <div className="flex h-full flex-col gap-2">
         <div className="py-4 text-center text-3xl">Lobby</div>
         <div className="flex justify-between">

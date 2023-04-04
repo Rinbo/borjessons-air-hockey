@@ -41,7 +41,7 @@ const router = createHashRouter([
 document.cookie = `SameSite=None;Secure`;
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <div className="h-screen w-screen bg-bg text-primary">
+  <div className="smallest-view-height w-screen bg-bg text-primary">
     <RouterProvider router={router} />
   </div>
 );

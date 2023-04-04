@@ -12,7 +12,11 @@ body {
   touch-action: unset;
   padding: 0;
   margin: 0;
-  height: svh;
+  background-color: rgb(226 232 240);
+}
+
+.smallest-view-height {
+  height: 100svh;
 }
 
 .btn {

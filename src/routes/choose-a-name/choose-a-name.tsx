@@ -19,7 +19,7 @@ export default function ChooseAName() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <Banner />
       <div className="m-2 flex w-full flex-col items-center gap-4 rounded-lg border-2 border-primary bg-bg p-4 text-primary shadow-xl shadow-primary sm:max-w-sm">
         <div className="text-xl font-bold">Choose a name</div>
