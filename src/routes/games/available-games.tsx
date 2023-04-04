@@ -52,7 +52,9 @@ export default function AvailableGames() {
     return (
       <div className="flex flex-col justify-center gap-2">
         <div className="text-center">No games available</div>
-        <button className="btn btn-primary-outlined">Create One</button>
+        <button className="btn btn-primary-outlined" onClick={() => navigate('/games/new')}>
+          Create One
+        </button>
       </div>
     );
   };
