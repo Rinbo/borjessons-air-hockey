@@ -32,6 +32,14 @@ export default function GameContainer() {
 
   React.useEffect(() => {
     stompClient.send(`/app/game/${id}/connect`, {}, createMessage(''));
+    const cleanup = () => stompClient && id && stompClient.send(`/app/game/${id}/disconnect`, {});
+
+    const cleanupOnUnmount = () => {
+      cleanup();
+      window.removeEventListener('beforeunload', cleanup);
+    };
+
+    window.addEventListener('beforeunload', cleanup);
 
     stompClient.subscribe(`/topic/game/${id}/chat`, (message: Stomp.Message) => {
       setMessages(prev => [{ ...JSON.parse(message.body), datetime: new Date() }, ...prev]);
@@ -49,7 +57,7 @@ export default function GameContainer() {
       setGameState(JSON.parse(message.body) as GameState);
     });
 
-    return () => stompClient.send(`/app/game/${id}/disconnect`, {});
+    return cleanupOnUnmount;
   }, []);
 
   const sendMessage = (message: string): void => {
