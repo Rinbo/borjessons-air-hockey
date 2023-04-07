@@ -4,6 +4,7 @@ import Lobby from './lobby';
 import Stomp from 'stompjs';
 import Game from './game';
 import CenterWrapper from '../../components/misc/center-wrapper';
+import { pingServer } from '../../utils/websocket-utils';
 
 enum GameState {
   PLAYER_1_DISCONNECT = 'PLAYER_1_DISCONNECT',
@@ -56,6 +57,8 @@ export default function GameContainer() {
     stompClient.subscribe(`/topic/game/${username}/game-state`, (message: Stomp.Message) => {
       setGameState(JSON.parse(message.body) as GameState);
     });
+
+    pingServer(username, stompClient);
 
     return cleanupOnUnmount;
   }, []);

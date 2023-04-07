@@ -31,7 +31,7 @@ export default function GamesLayout() {
 
     savedUsername &&
       get<string>(`/users/${savedUsername}/validate`).then(data => {
-        console.log(data, 'Received validated username');
+        console.info(data, 'Received validated username');
         setUsername(data);
         stompClient && stompClient.send('/app/users/enter', {}, data);
       });
