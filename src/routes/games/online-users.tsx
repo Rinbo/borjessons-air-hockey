@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { get } from '../../api/api';
 import OnlineUsersList, { User } from '../../components/users/online-users-list';
 import Stomp from 'stompjs';
-import { pingServer } from '../../utils/websocket-utils';
+import { pingListener } from '../../utils/websocket-utils';
 
 const ONLINE_USERS = ['Robin', 'Albin', 'Sixten', 'Maria'];
 
@@ -18,7 +18,7 @@ export function OnlineUsers() {
       setUsers(createUsers(JSON.parse(message.body)));
     });
 
-    pingServer(username, stompClient);
+    pingListener(username, stompClient);
   }, []);
 
   function createUsers(names: string[]) {

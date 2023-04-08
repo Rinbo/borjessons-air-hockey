@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { get } from '../../api/api';
 import Stomp from 'stompjs';
-import { pingServer } from '../../utils/websocket-utils';
+import { pingListener } from '../../utils/websocket-utils';
 
 type Game = { gameId: string; username: string; joinable: boolean };
 
@@ -26,7 +26,7 @@ export default function AvailableGames() {
       setGames(JSON.parse(message.body));
     });
 
-    pingServer(username, stompClient);
+    pingListener(username, stompClient);
   }, []);
 
   function renderAvailableGames() {

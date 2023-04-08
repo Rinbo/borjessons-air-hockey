@@ -4,7 +4,8 @@ import Lobby from './lobby';
 import Stomp from 'stompjs';
 import Game from './game';
 import CenterWrapper from '../../components/misc/center-wrapper';
-import { pingServer } from '../../utils/websocket-utils';
+import { pingListener } from '../../utils/websocket-utils';
+import useInterval from '../../hooks/useInterval';
 
 enum GameState {
   PLAYER_1_DISCONNECT = 'PLAYER_1_DISCONNECT',
@@ -30,6 +31,8 @@ export default function GameContainer() {
   const [players, setPlayers] = React.useState<Array<Player>>([]);
   const { username, stompClient } = useOutletContext<{ username: string; stompClient: Stomp.Client }>();
   const navigate = useNavigate();
+
+  useInterval(() => stompClient.send('/app/users/heartbeat', {}, username), 2000);
 
   React.useEffect(() => {
     stompClient.send(`/app/game/${id}/connect`, {}, createMessage(''));
@@ -58,7 +61,7 @@ export default function GameContainer() {
       setGameState(JSON.parse(message.body) as GameState);
     });
 
-    pingServer(username, stompClient);
+    pingListener(username, stompClient);
 
     return cleanupOnUnmount;
   }, []);

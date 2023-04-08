@@ -1,3 +1,4 @@
+import { log } from 'console';
 import { useEffect, useRef } from 'react';
 
 const useInterval = (callback: () => void, delay: number | null) => {
