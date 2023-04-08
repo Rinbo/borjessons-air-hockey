@@ -5,7 +5,6 @@ import Stomp from 'stompjs';
 import Game from './game';
 import CenterWrapper from '../../components/misc/center-wrapper';
 import { pingListener } from '../../utils/websocket-utils';
-import useInterval from '../../hooks/useInterval';
 
 enum GameState {
   PLAYER_1_DISCONNECT = 'PLAYER_1_DISCONNECT',
@@ -21,8 +20,8 @@ export type Message = { username: string; message: string; datetime: Date };
 export type Player = { username: string; agency: Agent; ready: boolean; score: number };
 
 /**
- * Need some kind of state machine for transitions between states.
- * ALSO: Error handling if backend is unavailable
+ * TODO Need some kind of state machine for transitions between states.
+ * TODO Error handling if backend is unavailable
  */
 export default function GameContainer() {
   const { id } = useParams<string>();
@@ -31,8 +30,6 @@ export default function GameContainer() {
   const [players, setPlayers] = React.useState<Array<Player>>([]);
   const { username, stompClient } = useOutletContext<{ username: string; stompClient: Stomp.Client }>();
   const navigate = useNavigate();
-
-  useInterval(() => stompClient.send('/app/users/heartbeat', {}, username), 2000);
 
   React.useEffect(() => {
     stompClient.send(`/app/game/${id}/connect`, {}, createMessage(''));
