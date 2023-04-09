@@ -5,7 +5,6 @@ import SockJS from 'sockjs-client/dist/sockjs';
 import Stomp from 'stompjs';
 import properties from '../../config/properties';
 import { get } from '../../api/api';
-import { log } from 'console';
 
 export default function GamesLayout() {
   const { wsBaseUrl } = properties();
@@ -17,25 +16,21 @@ export default function GamesLayout() {
   React.useEffect(() => {
     const socket = new SockJS(wsBaseUrl);
     const client = Stomp.over(socket);
-    connectWebSocket(client);
+    client.connect({}, _frame => setStompClient(client));
   }, []);
 
   React.useEffect(() => {
     const cleanup = () => stompClient && username && stompClient.send('/app/users/exit', {}, username);
-
-    const handleWindowFocus = () => {
-      console.info('Reconnecting websocket');
-      stompClient && connectWebSocket(stompClient);
-    };
+    const handleWindowFocus = () => attemptReconnect();
 
     const cleanupOnUnmount = () => {
       cleanup();
       window.removeEventListener('beforeunload', cleanup);
-      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('online', handleWindowFocus);
     };
 
     window.addEventListener('beforeunload', cleanup);
-    window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('online', handleWindowFocus);
 
     savedUsername &&
       get<string>(`/users/${savedUsername}/validate`).then(data => {
@@ -47,8 +42,12 @@ export default function GamesLayout() {
     return cleanupOnUnmount;
   }, [stompClient]);
 
-  function connectWebSocket(client: Stomp.Client) {
-    client.connect({}, _frame => setStompClient(client));
+  function attemptReconnect() {
+    console.info('checking to see if we should reconnect');
+    if (stompClient && !stompClient.connected) {
+      console.info('attempting to connect to websocket');
+      stompClient.connect({}, _frame => console.info('reconnected'));
+    }
   }
 
   const renderConnecting = (

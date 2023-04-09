@@ -5,6 +5,7 @@ import Stomp from 'stompjs';
 import Game from './game';
 import CenterWrapper from '../../components/misc/center-wrapper';
 import { pingListener } from '../../utils/websocket-utils';
+import useInterval from '../../hooks/useInterval';
 
 enum GameState {
   PLAYER_1_DISCONNECT = 'PLAYER_1_DISCONNECT',
