@@ -1,6 +1,5 @@
 import React from 'react';
 import IconButton from '../../components/buttons/icon-button';
-import shareIcon from '../../assets/svg/share.svg';
 import sendIcon from '../../assets/svg/send.svg';
 import { Message, Player } from './game-container';
 import { formatTime } from '../../utils/time-utils';

@@ -2,19 +2,19 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { get } from '../../api/api';
 import OnlineUsersList, { User } from '../../components/users/online-users-list';
-import Stomp from 'stompjs';
+import { Client, IMessage } from '@stomp/stompjs';
 import { pingListener } from '../../utils/websocket-utils';
 
 const ONLINE_USERS = ['Robin', 'Albin', 'Sixten', 'Maria'];
 
 export function OnlineUsers() {
   const [users, setUsers] = React.useState<User[]>();
-  const { username, stompClient } = useOutletContext<{ username: string; stompClient: Stomp.Client }>();
+  const { username, stompClient } = useOutletContext<{ username: string; stompClient: Client }>();
 
   React.useEffect(() => {
     get<string[]>('/users').then(data => setUsers(createUsers(data)));
 
-    stompClient.subscribe(`/topic/users`, (message: Stomp.Message) => {
+    stompClient.subscribe(`/topic/users`, (message: IMessage) => {
       setUsers(createUsers(JSON.parse(message.body)));
     });
 

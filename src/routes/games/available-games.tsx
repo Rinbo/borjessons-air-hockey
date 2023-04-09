@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { get } from '../../api/api';
-import Stomp from 'stompjs';
+import { Client, IMessage } from '@stomp/stompjs';
 import { pingListener } from '../../utils/websocket-utils';
 
 type Game = { gameId: string; username: string; joinable: boolean };
@@ -17,12 +17,12 @@ const DUMMY_DATA = [
 export default function AvailableGames() {
   const navigate = useNavigate();
   const [games, setGames] = React.useState<Array<Game>>([]);
-  const { username, stompClient } = useOutletContext<{ username: string; stompClient: Stomp.Client }>();
+  const { username, stompClient } = useOutletContext<{ username: string; stompClient: Client }>();
 
   React.useEffect(() => {
     get<Game[]>('/games').then(data => setGames(data));
 
-    stompClient.subscribe('/topic/games', (message: Stomp.Message) => {
+    stompClient.subscribe('/topic/games', (message: IMessage) => {
       setGames(JSON.parse(message.body));
     });
 

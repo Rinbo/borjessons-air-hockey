@@ -1,7 +1,7 @@
-import Stomp from 'stompjs';
+import { Client, IMessage } from '@stomp/stompjs';
 
-export function pingListener(username: string, stompClient: Stomp.Client) {
-  stompClient.subscribe(`/topic/user/${username}/ping`, (message: Stomp.Message) => {
-    stompClient.send('/app/users/heartbeat', {}, username);
+export function pingListener(username: string, stompClient: Client) {
+  stompClient.subscribe(`/topic/user/${username}/ping`, (_message: IMessage) => {
+    stompClient.publish({ destination: '/app/users/heartbeat', body: username });
   });
 }

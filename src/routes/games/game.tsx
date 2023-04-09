@@ -1,7 +1,7 @@
 import React from 'react';
 import ScoreBanner from '../../components/game/score-banner';
 import Board, { BroadcastState } from '../../game/board';
-import Stomp from 'stompjs';
+import { Client, IMessage } from '@stomp/stompjs';
 import { useWindowSize } from '../../hooks/useWindowSize';
 import { Player } from './game-container';
 import { useOutletContext, useParams } from 'react-router-dom';
@@ -12,7 +12,7 @@ const FPS = 60;
 type Speed = { x: number; y: number };
 type Position = Speed;
 
-type Props = { stompClient: Stomp.Client; players: Player[] };
+type Props = { stompClient: Client; players: Player[] };
 
 export default function Game({ stompClient, players }: Props) {
   const { id } = useParams<string>();
@@ -23,10 +23,13 @@ export default function Game({ stompClient, players }: Props) {
 
   React.useEffect(() => {
     const canvas = document.getElementById('game-board') as HTMLCanvasElement;
-    const board = new Board(canvas, { width, height }, (position: Position) => stompClient.send(`/app/game/${id}/update-handle`, {}, JSON.stringify(position)));
+    const board = new Board(canvas, { width, height }, (position: Position) =>
+      stompClient.publish({ destination: `/app/game/${id}/update-handle`, body: JSON.stringify(position) })
+    );
+
     boardRef.current = board;
 
-    stompClient.subscribe(`/topic/game/${id}/board-state/${getAgencyExtention(players, username)}`, (message: Stomp.Message) => {
+    stompClient.subscribe(`/topic/game/${id}/board-state/${getAgencyExtention(players, username)}`, (message: IMessage) => {
       const state = JSON.parse(message.body) as BroadcastState;
       setRemainingSeconds(state.remainingSeconds);
       board.update(state);

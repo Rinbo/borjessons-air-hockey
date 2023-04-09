@@ -1,11 +1,10 @@
 import React from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import Lobby from './lobby';
-import Stomp from 'stompjs';
 import Game from './game';
 import CenterWrapper from '../../components/misc/center-wrapper';
+import { Client, IMessage } from '@stomp/stompjs';
 import { pingListener } from '../../utils/websocket-utils';
-import useInterval from '../../hooks/useInterval';
 
 enum GameState {
   PLAYER_1_DISCONNECT = 'PLAYER_1_DISCONNECT',
@@ -20,21 +19,16 @@ export type Agent = 'PLAYER_1' | 'PLAYER_2';
 export type Message = { username: string; message: string; datetime: Date };
 export type Player = { username: string; agency: Agent; ready: boolean; score: number };
 
-/**
- * TODO Need some kind of state machine for transitions between states.
- * TODO Error handling if backend is unavailable
- */
 export default function GameContainer() {
   const { id } = useParams<string>();
   const [gameState, setGameState] = React.useState<GameState>(GameState.LOBBY);
   const [messages, setMessages] = React.useState<Array<Message>>([]);
   const [players, setPlayers] = React.useState<Array<Player>>([]);
-  const { username, stompClient } = useOutletContext<{ username: string; stompClient: Stomp.Client }>();
+  const { username, stompClient, connectAttempt } = useOutletContext<{ username: string; stompClient: Client; connectAttempt: number }>();
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    stompClient.send(`/app/game/${id}/connect`, {}, createMessage(''));
-    const cleanup = () => stompClient && id && stompClient.send(`/app/game/${id}/disconnect`, {});
+    const cleanup = () => stompClient && id && stompClient.publish({ destination: `/app/game/${id}/disconnect`, body: '' });
 
     const cleanupOnUnmount = () => {
       cleanup();
@@ -43,33 +37,35 @@ export default function GameContainer() {
 
     window.addEventListener('beforeunload', cleanup);
 
-    stompClient.subscribe(`/topic/game/${id}/chat`, (message: Stomp.Message) => {
+    stompClient.subscribe(`/topic/game/${id}/chat`, (message: IMessage) => {
       setMessages(prev => [{ ...JSON.parse(message.body), datetime: new Date() }, ...prev]);
     });
 
-    stompClient.subscribe(`/topic/game/${id}/players`, (message: Stomp.Message) => {
+    stompClient.subscribe(`/topic/game/${id}/players`, (message: IMessage) => {
       setPlayers(JSON.parse(message.body) as Array<Player>);
     });
 
-    stompClient.subscribe(`/topic/game/${id}/game-state`, (message: Stomp.Message) => {
+    stompClient.subscribe(`/topic/game/${id}/game-state`, (message: IMessage) => {
       setGameState(JSON.parse(message.body) as GameState);
     });
 
-    stompClient.subscribe(`/topic/game/${username}/game-state`, (message: Stomp.Message) => {
+    stompClient.subscribe(`/topic/game/${username}/game-state`, (message: IMessage) => {
       setGameState(JSON.parse(message.body) as GameState);
     });
+
+    stompClient.publish({ destination: `/app/game/${id}/connect`, body: createMessage('') });
 
     pingListener(username, stompClient);
 
     return cleanupOnUnmount;
-  }, []);
+  }, [connectAttempt]);
 
   const sendMessage = (message: string): void => {
-    stompClient && stompClient.send(`/app/game/${id}/chat`, {}, createMessage(message));
+    stompClient && stompClient.publish({ destination: `/app/game/${id}/chat`, body: createMessage(message) });
   };
 
   const toggleReady = (): void => {
-    stompClient && stompClient.send(`/app/game/${id}/toggle-ready`, {}, '');
+    stompClient && stompClient.publish({ destination: `/app/game/${id}/toggle-ready`, body: '' });
   };
 
   function createMessage(message: string): string {
