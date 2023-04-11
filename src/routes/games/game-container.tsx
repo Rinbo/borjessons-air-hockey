@@ -55,7 +55,6 @@ export default function GameContainer() {
 
     const cleanupOnUnmount = () => {
       cleanup();
-      console.log('running game-container clenup', stompClient?.connected);
       window.removeEventListener('beforeunload', cleanup);
     };
 

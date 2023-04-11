@@ -5,7 +5,11 @@ import { TsForm } from '../../components/form/ts-form';
 import Banner from '../../components/misc/banner';
 
 const NameSchema = z.object({
-  name: z.string().min(2, { message: 'Too short. Min 1 character' }).max(12, { message: 'Too long. Max 12 characters' })
+  name: z
+    .string()
+    .min(2, { message: 'Too short. Min 1 character' })
+    .max(12, { message: 'Too long. Max 12 characters' })
+    .regex(new RegExp('^([A-Za-z0-9])([A-Za-z0-9])*([A-Za-z0-9])$'), { message: 'Only alpha numerical characters allowed' })
 });
 
 export default function ChooseAName() {
