@@ -28,15 +28,6 @@ export default function GameContainer() {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    const cleanup = () => stompClient && id && stompClient.publish({ destination: `/app/game/${id}/disconnect`, body: '' });
-
-    const cleanupOnUnmount = () => {
-      cleanup();
-      window.removeEventListener('beforeunload', cleanup);
-    };
-
-    window.addEventListener('beforeunload', cleanup);
-
     stompClient.subscribe(`/topic/game/${id}/chat`, (message: IMessage) => {
       setMessages(prev => [{ ...JSON.parse(message.body), datetime: new Date() }, ...prev]);
     });
@@ -56,9 +47,20 @@ export default function GameContainer() {
     stompClient.publish({ destination: `/app/game/${id}/connect`, body: createMessage('') });
 
     pingListener(username, stompClient);
+  }, [connectAttempt]);
+
+  React.useEffect(() => {
+    const cleanup = () => stompClient && stompClient.publish({ destination: `/app/game/${id}/disconnect`, body: '' });
+    window.addEventListener('beforeunload', cleanup);
+
+    const cleanupOnUnmount = () => {
+      cleanup();
+      console.log('running game-container clenup', stompClient?.connected);
+      window.removeEventListener('beforeunload', cleanup);
+    };
 
     return cleanupOnUnmount;
-  }, [connectAttempt]);
+  }, []);
 
   const sendMessage = (message: string): void => {
     stompClient && stompClient.publish({ destination: `/app/game/${id}/chat`, body: createMessage(message) });

@@ -9,29 +9,29 @@ type ConnectionDetails = { connectAttempt: number; isConnected: boolean; isError
 
 export default function GamesLayout() {
   const savedUsername = localStorage.getItem('username');
-  const [username, setUsername] = React.useState<string>();
+  const [username, setUsername] = React.useState<undefined | string>();
   const location = useLocation();
   const [{ connectAttempt, isConnected, isError }, stompClient] = useWebsocket() as [ConnectionDetails, React.MutableRefObject<Client | null>];
 
   React.useEffect(() => {
+    savedUsername && get<string>(`/users/${savedUsername}/validate`).then(data => setUsername(data));
+  }, []);
+
+  React.useEffect(() => {
+    isConnected && username && stompClient.current!.publish({ destination: '/app/users/enter', body: username });
+  }, [isConnected, username]);
+
+  React.useEffect(() => {
     const cleanup = () => username && stompClient.current?.publish({ destination: '/app/users/exit', body: username });
+    window.addEventListener('beforeunload', cleanup);
 
     const cleanupOnUnmount = () => {
       cleanup();
       window.removeEventListener('beforeunload', cleanup);
     };
 
-    window.addEventListener('beforeunload', cleanup);
-
-    savedUsername &&
-      get<string>(`/users/${savedUsername}/validate`).then(data => {
-        console.info(data, 'Received validated username');
-        setUsername(data);
-        isConnected && stompClient.current!.publish({ destination: '/app/users/enter', body: data });
-      });
-
     return cleanupOnUnmount;
-  }, [isConnected]);
+  }, [username]);
 
   const renderConnecting = (
     <div className="flex h-screen items-center justify-center">

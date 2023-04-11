@@ -13,13 +13,15 @@ export const useWebsocket = () => {
   useEffect(() => {
     const cleanup = () => {
       setIsConnected(false);
+      setConnectAttempt(0);
     };
+
+    window.addEventListener('beforeunload', cleanup);
+
     const cleanupOnUnmount = () => {
       cleanup();
       window.removeEventListener('beforeunload', cleanup);
     };
-
-    window.addEventListener('beforeunload', cleanup);
 
     stompClient.current = new Client({
       webSocketFactory: () => new SockJS(wsBaseUrl),
