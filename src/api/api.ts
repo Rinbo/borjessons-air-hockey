@@ -8,13 +8,15 @@ interface RequestOptions {
   body?: string;
 }
 
-const statusError = (status: number) => new Error(`HTTP error! status: ${status}`);
+const statusError = (status: number): Error => new Error(`HTTP error! status: ${status}`);
 
 export async function get<T>(path: string): Promise<T> {
   const { restBaseUrl } = properties();
   const requestOptions: RequestOptions = getRequestOptions('GET');
 
   const response = await fetch(restBaseUrl + path, requestOptions);
+
+  console.log(response);
 
   if (!response.ok) {
     throw statusError(response.status);

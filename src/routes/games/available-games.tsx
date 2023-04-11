@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { get } from '../../api/api';
 import { Client, IMessage } from '@stomp/stompjs';
 import { pingListener } from '../../utils/websocket-utils';
+import { trimName } from '../../utils/misc-utils';
 
 type Game = { gameId: string; username: string; joinable: boolean };
 
@@ -38,7 +39,7 @@ export default function AvailableGames() {
             key={game.gameId}
             className="flex items-center justify-between rounded-md border-black bg-slate-300 px-3 py-2 duration-300 hover:scale-105 hover:transform hover:border hover:bg-teal-100"
           >
-            <span className="font-bold">{`${game.username}'s game`}</span>
+            <span className="font-bold">{`${trimName(game.username)}'s game`}</span>
             <button
               className="btn border border-primary bg-teal-200 text-primary hover:bg-teal-300 hover:text-white"
               onClick={() => navigate('/games/' + game.gameId)}
@@ -68,7 +69,7 @@ export default function AvailableGames() {
       .map(row => {
         return (
           <div key={row.gameId} className="flex items-center justify-between rounded-md border-black bg-slate-300 px-3 py-2">
-            <span className="font-bold">{`${row.username}'s game`}</span>
+            <span className="font-bold">{`${trimName(row.username)}'s game`}</span>
             <button className="btn cursor-not-allowed border border-primary bg-red-300">In progress</button>
           </div>
         );

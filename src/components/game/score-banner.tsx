@@ -1,4 +1,5 @@
 import { Player } from '../../routes/games/game-container';
+import { trimName } from '../../utils/misc-utils';
 
 type Props = { players: Player[]; width: number; remainingSeconds: number };
 
@@ -6,7 +7,7 @@ export default function ScoreBanner({ players, width, remainingSeconds }: Props)
   const renderPlayers = players.map((player, index) => {
     return (
       <div key={index} className="flex flex-col items-center px-2 text-xs">
-        <div>{player.username}</div>
+        <div>{trimName(player.username)}</div>
         <div>{player.score}</div>
       </div>
     );

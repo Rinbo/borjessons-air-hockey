@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { TsForm } from '../../components/form/ts-form';
 import Banner from '../../components/misc/banner';
+import { generateUUID } from '../../utils/misc-utils';
 
 const NameSchema = z.object({
   name: z
@@ -16,9 +17,10 @@ export default function ChooseAName() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || '/';
+  const message = location.state?.message;
 
   const onSubmit = (data: z.infer<typeof NameSchema>) => {
-    localStorage.setItem('username', data.name);
+    localStorage.setItem('username', data.name + '$' + generateUUID());
     navigate(from, { replace: true });
   };
 
@@ -26,7 +28,7 @@ export default function ChooseAName() {
     <div className="flex h-full items-center justify-center">
       <Banner />
       <div className="m-2 flex w-full flex-col items-center gap-4 rounded-lg border-2 border-primary bg-bg p-4 text-primary shadow-xl shadow-primary sm:max-w-sm">
-        <div className="text-xl font-bold">Choose a name</div>
+        <div className="text-xl font-bold">{message || 'Choose a name'}</div>
         <TsForm
           schema={NameSchema}
           onSubmit={onSubmit}

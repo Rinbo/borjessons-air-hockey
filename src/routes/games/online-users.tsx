@@ -4,6 +4,7 @@ import { get } from '../../api/api';
 import OnlineUsersList, { User } from '../../components/users/online-users-list';
 import { Client, IMessage } from '@stomp/stompjs';
 import { pingListener } from '../../utils/websocket-utils';
+import { trimName } from '../../utils/misc-utils';
 
 const ONLINE_USERS = ['Robin', 'Albin', 'Sixten', 'Maria'];
 
@@ -23,7 +24,7 @@ export function OnlineUsers() {
 
   function createUsers(names: string[]) {
     return names.map(name => {
-      return { name };
+      return { name: trimName(name) };
     });
   }
 

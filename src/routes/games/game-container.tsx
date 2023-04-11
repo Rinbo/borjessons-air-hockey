@@ -5,6 +5,7 @@ import Game from './game';
 import CenterWrapper from '../../components/misc/center-wrapper';
 import { Client, IMessage } from '@stomp/stompjs';
 import { pingListener } from '../../utils/websocket-utils';
+import { trimName } from '../../utils/misc-utils';
 
 enum GameState {
   PLAYER_1_DISCONNECT = 'PLAYER_1_DISCONNECT',
@@ -97,11 +98,11 @@ export default function GameContainer() {
     }
 
     const winner = player1.score > player2.score ? player1 : player2;
-    return `${winner.username} Won!`;
+    return `${trimName(winner.username)} Won!`;
   }
 
   function getResult(): String {
-    const arr = players.map(player => player.username + ': ' + player.score);
+    const arr = players.map(player => trimName(player.username) + ': ' + player.score);
     return arr.join(' | ');
   }
 

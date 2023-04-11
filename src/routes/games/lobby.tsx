@@ -5,6 +5,7 @@ import { Message, Player } from './game-container';
 import { formatTime } from '../../utils/time-utils';
 import { useNavigate } from 'react-router-dom';
 import CopyUrlButton from '../../components/buttons/copy-link-button';
+import { shortenAgency, trimName } from '../../utils/misc-utils';
 
 type Props = {
   sendMessage: (message: string) => void;
@@ -28,13 +29,6 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
     setIsReady(prevState => !prevState);
   }
 
-  function shortenAgency(agency: string): string {
-    return agency
-      .split('_')
-      .map(e => e.charAt(0))
-      .join('');
-  }
-
   return (
     <div className="h-full px-2 py-4 sm:container sm:mx-auto sm:max-w-3xl">
       <div className="flex h-full flex-col gap-2">
@@ -47,7 +41,7 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
             <div className="inline-flex flex-col gap-2">
               {players.map(({ username, ready, agency }) => (
                 <span key={agency} className={`overflow-hidden whitespace-nowrap text-xs ${ready && 'text-green-400'}`}>
-                  {shortenAgency(agency)}: {username}
+                  {shortenAgency(agency)}: {trimName(username)}
                 </span>
               ))}
             </div>
@@ -63,7 +57,7 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
           {messages.map((line, index) => (
             <div className="flex gap-2" key={index}>
               <span>{formatTime(line.datetime)}</span>
-              <span className="ml-1">{line.username}:</span>
+              <span className="ml-1">{trimName(line.username)}:</span>
               <span className="ml-1">{line.message}</span>
             </div>
           ))}
