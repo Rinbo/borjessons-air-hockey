@@ -47,6 +47,7 @@ body {
   @apply hover:border-orange-300 hover:bg-orange-300;
 }
 
+/* landing page animation */
 .animate-grow-shrink {
   animation: grow-shrink 3s ease-in-out forwards;
 }
@@ -67,5 +68,38 @@ body {
   100% {
     transform: scale(1);
     opacity: 0;
+  }
+}
+
+/* Circular menu */
+.animate-eight-expand {
+  animation: eight 0.6s ease forwards;
+  display: flex;
+}
+
+.animate-seven-expand {
+  animation: seven 0.6s ease forwards;
+  display: flex;
+}
+
+@keyframes eight {
+  0% {
+    transform: scale(0) translateX(-50%) translateY(0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1) translateX(-110%) translateY(20%);
+  }
+}
+
+@keyframes seven {
+  0% {
+    transform: scale(0) translateX(0) translateY(30%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1) translateX(-20%) translateY(110%);
   }
 }

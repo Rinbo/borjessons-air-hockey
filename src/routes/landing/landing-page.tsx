@@ -4,6 +4,7 @@ import playIcon from '../../assets/svg/play.svg';
 import shareIcon from '../../assets/svg/share.svg';
 import wifiIcon from '../../assets/svg/wifi.svg';
 import '../../css/landing-bg.css';
+import CircularMenuButton from '../../components/buttons/circular-menu-button';
 
 export default function LandingPage() {
   const navigate = useNavigate();
