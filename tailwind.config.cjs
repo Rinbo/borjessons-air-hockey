@@ -6,7 +6,10 @@ module.exports = {
       colors: ({ colors }) => ({
         primary: colors.slate[700],
         bg: colors.slate[200]
-      })
+      }),
+      animation: {
+        'spin-slow': 'spin 1s linear infinite'
+      }
     }
   },
   plugins: []

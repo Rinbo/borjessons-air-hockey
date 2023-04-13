@@ -1,32 +1,67 @@
-import { useState } from 'react';
-import { FiSettings, FiClipboard, FiX } from 'react-icons/fi';
+import { useState, useEffect, useRef } from 'react';
+import { FiSettings, FiX } from 'react-icons/fi';
+import CopyUrlButton from './copy-link-button';
+import { useNavigate } from 'react-router-dom';
 
 const CircularMenuButton = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [spin, setSpin] = useState<boolean>(false);
+  const componentRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
-  const toggleExpansion = () => {
+  function toggleExpansion() {
+    triggerSpin();
     setIsExpanded(!isExpanded);
+  }
+
+  const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+    const target = event.target;
+    if (target instanceof Node && componentRef.current && !componentRef.current.contains(target)) {
+      setIsExpanded(prevState => {
+        if (prevState) triggerSpin();
+        return false;
+      });
+    }
   };
 
+  function triggerSpin() {
+    setSpin(true);
+    setTimeout(() => setSpin(false), 500);
+  }
+
+  useEffect(() => {
+    window.addEventListener('click', handleClickOutside);
+    window.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      window.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="relative">
-      <button className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800 text-white" onClick={toggleExpansion} title="Settings">
+    <div className="relative" ref={componentRef}>
+      <button
+        className={`${
+          spin && 'animate-spin'
+        } relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 border-primary bg-primary text-bg hover:bg-slate-600`}
+        onClick={toggleExpansion}
+        title="Settings"
+      >
         <FiSettings size={24} />
       </button>
 
-      <button
-        className={`${
-          isExpanded && 'animate-eight-expand'
-        } absolute left-0 bottom-0 hidden h-12 w-12 items-center justify-center rounded-full bg-gray-800 text-white`}
+      <CopyUrlButton
+        classes={`${
+          isExpanded && 'posEight'
+        } buttonAnimated absolute left-0 bottom-0 z-0 flex h-12 w-12 scale-50 items-center justify-center rounded-full border-2 border-primary bg-bg text-primary opacity-0 hover:bg-teal-200`}
         title="Clipboard"
-      >
-        <FiClipboard size={24} />
-      </button>
+      ></CopyUrlButton>
       <button
         className={`${
-          isExpanded && 'animate-seven-expand'
-        } absolute left-0 bottom-0 hidden h-12 w-12 items-center justify-center rounded-full bg-gray-800 text-white`}
+          isExpanded && 'posSeven'
+        } buttonAnimated absolute left-0 bottom-0 z-0 flex h-12 w-12 scale-50 items-center justify-center rounded-full border-2 border-primary bg-bg text-primary opacity-0 hover:bg-teal-200`}
         title="Exit"
+        onClick={() => navigate('/')}
       >
         <FiX size={24} />
       </button>

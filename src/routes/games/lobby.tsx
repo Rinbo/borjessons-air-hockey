@@ -6,6 +6,7 @@ import { formatTime } from '../../utils/time-utils';
 import { useNavigate } from 'react-router-dom';
 import CopyUrlButton from '../../components/buttons/copy-link-button';
 import { shortenAgency, trimName } from '../../utils/misc-utils';
+import CircularMenuButton from '../../components/buttons/circular-menu-button';
 
 type Props = {
   sendMessage: (message: string) => void;
@@ -46,11 +47,8 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
               ))}
             </div>
           </div>
-          <div className="flex gap-2">
-            <CopyUrlButton />
-            <button className="btn btn-orange-outlined w-20" onClick={() => navigate('/')}>
-              Exit
-            </button>
+          <div className="flex">
+            <CircularMenuButton />
           </div>
         </div>
         <div className="flex flex-1 flex-col-reverse overflow-y-scroll rounded-md border-2 border-primary border-opacity-50 bg-slate-100 p-2">

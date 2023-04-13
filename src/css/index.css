@@ -82,6 +82,16 @@ body {
   display: flex;
 }
 
+.animate-eight-recede {
+  animation: eight 0.6s ease reverse;
+  display: flex;
+}
+
+.animate-seven-recede {
+  animation: seven 0.6s ease reverse;
+  display: flex;
+}
+
 @keyframes eight {
   0% {
     transform: scale(0) translateX(-50%) translateY(0);
@@ -90,6 +100,7 @@ body {
 
   100% {
     transform: scale(1) translateX(-110%) translateY(20%);
+    opacity: 1;
   }
 }
 
@@ -101,5 +112,20 @@ body {
 
   100% {
     transform: scale(1) translateX(-20%) translateY(110%);
+    opacity: 1;
   }
+}
+
+.posEight {
+  transform: translateX(-110%) translateY(20%);
+  opacity: 1;
+}
+
+.posSeven {
+  transform: translateX(-20%) translateY(110%);
+  opacity: 1;
+}
+
+.buttonAnimated {
+  transition: all 0.6s ease;
 }
