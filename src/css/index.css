@@ -117,12 +117,12 @@ body {
 }
 
 .posEight {
-  transform: translateX(-110%) translateY(20%);
+  transform: translateX(-115%);
   opacity: 1;
 }
 
 .posSeven {
-  transform: translateX(-20%) translateY(110%);
+  transform: translateX(-230%);
   opacity: 1;
 }
 

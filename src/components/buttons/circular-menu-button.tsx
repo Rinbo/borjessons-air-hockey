@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { FiSettings, FiX } from 'react-icons/fi';
+import { FiSettings } from 'react-icons/fi';
+import { BiExit } from 'react-icons/bi';
 import CopyUrlButton from './copy-link-button';
 import { useNavigate } from 'react-router-dom';
 
@@ -52,18 +53,18 @@ const CircularMenuButton = () => {
 
       <CopyUrlButton
         classes={`${
-          isExpanded && 'posEight'
-        } buttonAnimated absolute left-0 bottom-0 z-0 flex h-12 w-12 scale-50 items-center justify-center rounded-full border-2 border-primary bg-bg text-primary opacity-0 hover:bg-teal-200`}
+          isExpanded && 'posSeven'
+        } buttonAnimated absolute left-0 bottom-0 z-0 flex h-12 w-12 scale-50 items-center justify-center rounded-full border border-primary bg-slate-100 text-primary opacity-0 shadow-md hover:bg-teal-200`}
         title="Clipboard"
       ></CopyUrlButton>
       <button
         className={`${
-          isExpanded && 'posSeven'
-        } buttonAnimated absolute left-0 bottom-0 z-0 flex h-12 w-12 scale-50 items-center justify-center rounded-full border-2 border-primary bg-bg text-primary opacity-0 hover:bg-teal-200`}
+          isExpanded && 'posEight'
+        } buttonAnimated absolute left-0 bottom-0 z-0 flex h-12 w-12 scale-50 items-center justify-center rounded-full border border-primary bg-slate-100 text-primary opacity-0 shadow-md hover:bg-teal-200`}
         title="Exit"
         onClick={() => navigate('/')}
       >
-        <FiX size={24} />
+        <BiExit size={24} />
       </button>
     </div>
   );

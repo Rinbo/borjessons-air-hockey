@@ -3,10 +3,9 @@ import IconButton from '../../components/buttons/icon-button';
 import sendIcon from '../../assets/svg/send.svg';
 import { Message, Player } from './game-container';
 import { formatTime } from '../../utils/time-utils';
-import { useNavigate } from 'react-router-dom';
-import CopyUrlButton from '../../components/buttons/copy-link-button';
 import { shortenAgency, trimName } from '../../utils/misc-utils';
 import CircularMenuButton from '../../components/buttons/circular-menu-button';
+import NameBanner from '../../components/game/name-banner';
 
 type Props = {
   sendMessage: (message: string) => void;
@@ -18,7 +17,6 @@ type Props = {
 export default function Lobby({ sendMessage, messages, players, toggleReady }: Props) {
   const [message, setMessage] = React.useState<string>('');
   const [isReady, setIsReady] = React.useState<boolean>(false);
-  const navigate = useNavigate();
 
   function handleSendMessage() {
     sendMessage(message);
@@ -39,18 +37,12 @@ export default function Lobby({ sendMessage, messages, players, toggleReady }: P
             <button className={`btn ${isReady ? 'border border-primary bg-primary text-bg' : 'btn-primary-outlined'}`} onClick={onToggleReady}>
               Ready
             </button>
-            <div className="inline-flex flex-col gap-2">
-              {players.map(({ username, ready, agency }) => (
-                <span key={agency} className={`overflow-hidden whitespace-nowrap text-xs ${ready && 'text-green-400'}`}>
-                  {shortenAgency(agency)}: {trimName(username)}
-                </span>
-              ))}
-            </div>
           </div>
           <div className="flex">
             <CircularMenuButton />
           </div>
         </div>
+        <NameBanner players={players} />
         <div className="flex flex-1 flex-col-reverse overflow-y-scroll rounded-md border-2 border-primary border-opacity-50 bg-slate-100 p-2">
           {messages.map((line, index) => (
             <div className="flex gap-2" key={index}>

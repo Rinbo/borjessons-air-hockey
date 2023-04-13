@@ -18,7 +18,7 @@ enum GameState {
 
 export type Agent = 'PLAYER_1' | 'PLAYER_2';
 export type Message = { username: string; message: string; datetime: Date };
-export type Player = { username: string; agency: Agent; ready: boolean; score: number };
+export type Player = { username: string; agency: Agent; ready: boolean; score: number; gamesWon: number };
 
 export default function GameContainer() {
   const { id } = useParams<string>();
