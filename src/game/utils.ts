@@ -29,3 +29,25 @@ export function createPuckGradient(ctx: CanvasRenderingContext2D, x: number, y: 
   gradient.addColorStop(1.0, '#111111');
   return gradient;
 }
+
+/**
+ * Pre-renders a gradient circle onto an offscreen canvas and returns it.
+ * Can be drawn via ctx.drawImage() for much faster per-frame rendering.
+ */
+export function createSpriteCanvas(
+  radius: number,
+  gradientFactory: (ctx: CanvasRenderingContext2D, x: number, y: number, r: number) => CanvasGradient
+): HTMLCanvasElement {
+  const size = Math.ceil(radius * 2);
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.beginPath();
+  ctx.arc(radius, radius, radius, 0, 2 * Math.PI);
+  ctx.fillStyle = gradientFactory(ctx, radius, radius, radius);
+  ctx.fill();
+
+  return canvas;
+}

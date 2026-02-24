@@ -8,7 +8,7 @@ import GenerateRoom from './routes/games/generate-room';
 import './css/index.css';
 import AvailableGames from './routes/games/available-games';
 import GameContainer from './routes/games/game-container';
-import TestGame from './routes/games/test-game';
+
 import { OnlineUsers } from './routes/games/online-users';
 
 const router = createHashRouter([
@@ -21,10 +21,7 @@ const router = createHashRouter([
     path: '/choose-a-name',
     element: <ChooseAName />
   },
-  {
-    path: '/test',
-    element: <TestGame />
-  },
+
   {
     path: '/games',
     element: <GamesLayout />,

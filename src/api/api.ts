@@ -16,8 +16,6 @@ export async function get<T>(path: string): Promise<T> {
 
   const response = await fetch(restBaseUrl + path, requestOptions);
 
-  console.log(response);
-
   if (!response.ok) {
     throw statusError(response.status);
   }

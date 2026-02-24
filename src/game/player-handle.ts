@@ -1,34 +1,42 @@
 import Board, { BroadcastHandle, GameObject, Position } from './board';
-import { UPDATE_RATE, HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
-import { createHandleGradient } from './utils';
+import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
 
 type ClientEvent = MouseEvent | Touch;
+
+const BROADCAST_INTERVAL_MS = 20; // ~50Hz, aligned with server tick rate
 
 export default class PlayerHandle implements GameObject {
   private board: Board;
   private broadcastHandle: BroadcastHandle;
   private isDragging: boolean;
   private position: Position;
-  private tick: number;
+  private lastBroadcastTime: number;
+  private sprite: HTMLCanvasElement | null = null;
+  private abortController: AbortController;
 
   constructor(board: Board, broadcastHandle: BroadcastHandle) {
     this.board = board;
     this.broadcastHandle = broadcastHandle;
     this.isDragging = false;
     this.position = PLAYER_HANDLE_START_POS;
-    this.tick = UPDATE_RATE;
+    this.lastBroadcastTime = 0;
+    this.abortController = new AbortController();
     this.draw();
   }
 
   public setEventListeners(): void {
+    // Abort previous listeners to prevent accumulation on resize
+    this.abortController.abort();
+    this.abortController = new AbortController();
+    const signal = this.abortController.signal;
     const canvas = this.board.getCanvas();
 
-    canvas.addEventListener('touchstart', event => this.onTouchStart(event), { passive: false });
-    canvas.addEventListener('mousedown', event => this.onStart(event));
-    canvas.addEventListener('touchmove', event => this.onTouchMove(event), { passive: false });
-    canvas.addEventListener('mousemove', event => this.onMove(event));
-    canvas.addEventListener('touchend', () => (this.isDragging = false));
-    canvas.addEventListener('mouseup', () => (this.isDragging = false));
+    canvas.addEventListener('touchstart', event => this.onTouchStart(event), { passive: false, signal });
+    canvas.addEventListener('mousedown', event => this.onStart(event), { signal });
+    canvas.addEventListener('touchmove', event => this.onTouchMove(event), { passive: false, signal });
+    canvas.addEventListener('mousemove', event => this.onMove(event), { signal });
+    canvas.addEventListener('touchend', () => (this.isDragging = false), { signal });
+    canvas.addEventListener('mouseup', () => (this.isDragging = false), { signal });
   }
 
   public update(position: Position): void {
@@ -37,6 +45,14 @@ export default class PlayerHandle implements GameObject {
 
   public draw(): void {
     this.drawHandle();
+  }
+
+  public updateSprite(sprite: HTMLCanvasElement): void {
+    this.sprite = sprite;
+  }
+
+  public destroy(): void {
+    this.abortController.abort();
   }
 
   private onTouchStart(event: TouchEvent): void {
@@ -60,18 +76,17 @@ export default class PlayerHandle implements GameObject {
   private onMove(event: ClientEvent): void {
     if (this.isDragging) {
       this.position = this.normalizePosition(this.getCanvasOffset(event));
-      this.drawHandle();
+      // No drawHandle() here — the rAF loop handles drawing
       this.broadcastPosition();
     }
   }
 
   private broadcastPosition(): void {
-    if (this.tick === UPDATE_RATE) {
+    const now = performance.now();
+    if (now - this.lastBroadcastTime >= BROADCAST_INTERVAL_MS) {
       this.broadcastHandle(this.position);
-      this.tick = 0;
-      return;
+      this.lastBroadcastTime = now;
     }
-    this.tick++;
   }
 
   private isWithinBoundsOfHandle(x: number, y: number): boolean {
@@ -82,11 +97,19 @@ export default class PlayerHandle implements GameObject {
   private drawHandle(): void {
     const ctx = this.board.getContext();
     const { width, height } = this.board.getCanvas();
+    const px = this.position.x * width;
+    const py = this.position.y * height;
+    const r = HANDLE_RADIUS.x * width;
 
-    ctx.beginPath();
-    ctx.arc(this.position.x * width, this.position.y * height, HANDLE_RADIUS.x * width, 0, 2 * Math.PI);
-    ctx.fillStyle = createHandleGradient(ctx, this.position.x * width, this.position.y * height, HANDLE_RADIUS.x * width);
-    ctx.fill();
+    if (this.sprite) {
+      ctx.drawImage(this.sprite, px - r, py - r);
+    } else {
+      // Fallback: direct draw (used before first sprite is generated)
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, 2 * Math.PI);
+      ctx.fillStyle = '#303030';
+      ctx.fill();
+    }
   }
 
   private getCanvasOffset(event: ClientEvent): Position {
