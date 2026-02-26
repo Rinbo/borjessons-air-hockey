@@ -28,13 +28,15 @@ with zero installs required.
 
 Börjessons Air Hockey is a client–server multiplayer game designed for
 commercial distribution. The client is a single-page application built with
-**React 18**, **TypeScript**, and **HTML5 Canvas**. It communicates with a
-dedicated [Spring Boot game server](https://github.com/Rinbo/air-hockey-server)
-over a custom binary WebSocket protocol for game state synchronization and
+**vanilla TypeScript**, **HTML5 Canvas**, and a custom **CSS design system**
+following a Nordic Minimal aesthetic. It communicates with a dedicated
+[Spring Boot game server](https://github.com/Rinbo/air-hockey-server) over a
+custom binary WebSocket protocol for game state synchronization and
 STOMP/WebSocket for lobby and chat functionality.
 
 The project prioritizes low-latency input handling, efficient rendering, and a
-mobile-first user experience.
+mobile-first user experience. The architecture is designed to be easily
+adaptable for a future PixiJS rendering layer.
 
 ---
 
@@ -44,11 +46,12 @@ mobile-first user experience.
 | --------------------- | ------------------------------------------------------------------------------------- |
 | **Multiplayer**       | Real-time 1v1 matches with server-authoritative game state                            |
 | **Game Lobby**        | Create rooms, browse available games, join with one tap                               |
-| **Live Chat**         | In-lobby chat via STOMP messaging                                                     |
+| **Live Chat**         | In-lobby chat via STOMP messaging with per-user color coding                          |
 | **Score Tracking**    | Per-match and cumulative score display with winner announcement                       |
 | **Touch & Mouse**     | Full support for both pointer and touch input with drag-based handle control          |
 | **Responsive Canvas** | Board dynamically resizes to fit any viewport while preserving the 0.625 aspect ratio |
 | **Online Presence**   | See who is currently online                                                           |
+| **Board Graphics**    | Ice-rink surface with center circle, rink markings, 3D goals, and metallic handles    |
 
 ---
 
@@ -74,6 +77,10 @@ mobile-first user experience.
 └──────────────────────────────────────────────────────────┘
 ```
 
+Each page is a TypeScript module exporting `mount(container)` and `unmount()`
+lifecycle methods, managed by a lightweight hash-based router. This pattern maps
+directly to future PixiJS scenes.
+
 ---
 
 ## Tech Stack
@@ -81,14 +88,14 @@ mobile-first user experience.
 | Layer                 | Technology                                              |
 | --------------------- | ------------------------------------------------------- |
 | **Language**          | TypeScript 4.9                                          |
-| **UI Framework**      | React 18                                                |
-| **Routing**           | React Router v6                                         |
+| **UI**                | Vanilla TypeScript (DOM manipulation)                   |
+| **Routing**           | Custom hash-based router with `:id` params              |
 | **Build Tool**        | Vite 4                                                  |
 | **Canvas Rendering**  | HTML5 Canvas 2D API                                     |
 | **WebSocket (game)**  | Native `WebSocket` with binary (`ArrayBuffer`) protocol |
 | **WebSocket (lobby)** | STOMP over SockJS (`@stomp/stompjs`)                    |
-| **Form Handling**     | React Hook Form + Zod validation                        |
-| **Styling**           | Tailwind CSS 3                                          |
+| **Styling**           | Custom CSS design system (Nordic Minimal)               |
+| **Typography**        | Inter (body) + Exo (display) via Google Fonts           |
 | **Formatting**        | Prettier                                                |
 
 ---
@@ -126,7 +133,8 @@ configured in `.env.development`.
 npm run build
 ```
 
-Output is written to `dist/`.
+Output is written to `dist/`. Production bundle: ~17 KB CSS + ~117 KB JS (~35 KB
+gzipped).
 
 ---
 
@@ -135,34 +143,38 @@ Output is written to `dist/`.
 ```
 src/
 ├── api/               # REST API client utilities
-├── assets/svg/        # SVG icons (play, share, wifi, etc.)
-├── components/        # Reusable UI components
-│   ├── buttons/       #   Button variants (icon button, etc.)
-│   ├── canvas/        #   Canvas wrapper
-│   ├── form/          #   Form components with validation
-│   ├── game/          #   Score banner, game-specific UI
-│   ├── misc/          #   Layout helpers (center wrapper, etc.)
-│   ├── modal/         #   Modal dialogs
-│   └── users/         #   User list / online users
-├── config/            # Runtime properties (API URLs)
-├── css/               # Global styles, landing background
-├── game/              # Core game engine (client-side)
-│   ├── board.ts       #   Board: canvas rendering, interpolation
-│   ├── constants.ts   #   Game constants (aspect ratio, radii, etc.)
+├── assets/svg/        # SVG icons (play, share, wifi, send)
+├── config/            # Runtime properties (API URLs from env)
+├── game/              # Core game engine (framework-agnostic)
+│   ├── board.ts       #   Board: canvas rendering, interpolation, ice-rink graphics
+│   ├── constants.ts   #   Game constants (aspect ratio, radii, duration)
 │   ├── game-websocket.ts  #   Binary WebSocket client
-│   ├── input.ts       #   Input abstraction
+│   ├── input.ts       #   Input abstraction (touch/mouse)
 │   ├── opponent-handle.ts #   Opponent handle rendering
 │   ├── player-handle.ts   #   Player handle with touch/mouse input
 │   ├── puck.ts        #   Puck rendering
 │   └── utils.ts       #   Sprite generation, gradient helpers
-├── hooks/             # Custom React hooks (window size, etc.)
-├── routes/            # Page-level components (React Router)
-│   ├── choose-a-name/ #   Username entry
-│   ├── error/         #   Error boundary page
-│   ├── games/         #   Game lobby, room, active game
-│   └── landing/       #   Home / landing page
-├── utils/             # General utilities (WebSocket helpers, etc.)
-└── main.tsx           # Application entry point & router config
+├── pages/             # Page controllers (mount/unmount lifecycle)
+│   ├── landing.ts     #   Home page with hero title and navigation
+│   ├── choose-name.ts #   Username entry with validation
+│   ├── available-games.ts #   Browse and join games
+│   ├── game-container.ts  #   Game state machine (lobby → game → score)
+│   ├── game-view.ts   #   Canvas setup, score banner, rAF loop
+│   ├── lobby.ts       #   Chat, ready toggle, FAB menu
+│   ├── online-users.ts #   Online user grid with avatars
+│   ├── generate-room.ts #  UUID room generation + redirect
+│   └── error.ts       #   Error display
+├── styles/            # CSS design system (Nordic Minimal)
+│   ├── variables.css  #   Design tokens (colors, typography, spacing)
+│   ├── base.css       #   Reset, global styles
+│   ├── components.css #   Buttons, cards, forms, modals, FAB, toasts
+│   ├── pages.css      #   Page-specific layouts
+│   └── animations.css #   Particles, ripple, fades, transitions
+├── utils/             # General utilities (WebSocket helpers, misc)
+├── router.ts          # Hash-based router with param matching
+├── stomp-connection.ts # STOMP/SockJS connection manager
+├── types.ts           # Shared types (GameState, Player, Message)
+└── main.ts            # Entry point: style imports, route registration
 ```
 
 ---
@@ -188,10 +200,11 @@ Lower-frequency events (player list updates, chat messages, game state
 transitions) use STOMP messaging. Topics include:
 
 - `/topic/game/{id}/chat` — chat messages
-- `/topic/game/{id}/players` — player roster updates
+- `/topic/game/{id}/players` — player roster updates (including scores)
 - `/topic/game/{id}/game-state` — state machine transitions (lobby → running →
   score screen)
 - `/topic/games` — available game list broadcast
+- `/topic/users` — online user list updates
 
 ---
 
@@ -207,11 +220,16 @@ The client implements several techniques to ensure smooth 60 FPS gameplay:
 - **Pre-rendered sprite caching** — handle and puck graphics are drawn once to
   off-screen canvases and reused via `drawImage`, avoiding redundant
   gradient/path operations per frame
-- **Throttled React state updates** — the game timer only triggers a React
-  re-render when the displayed second actually changes, preventing render
-  thrashing during gameplay
+- **Pre-rendered background** — the ice-rink surface, markings, and goals are
+  composited once to an off-screen canvas and blitted per frame, eliminating
+  repeated draw calls for static elements
+- **Minimal DOM updates** — the game timer only updates the DOM when the
+  displayed second changes; score updates are targeted element replacements
+  rather than full re-renders
 - **Touch/pointer event optimization** — input listeners are managed with proper
   cleanup to prevent memory leaks
+- **Zero-dependency UI** — no framework runtime overhead; the entire production
+  JS bundle is ~35 KB gzipped
 
 ---
 

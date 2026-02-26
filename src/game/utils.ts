@@ -1,4 +1,4 @@
-import { Player } from '../routes/games/game-container';
+import type { Player } from '../types';
 
 export function getAgencyExtention(players: Player[], username: string): string {
   const player = players.find(player => player.username === username);
@@ -15,18 +15,22 @@ export function getAgencyExtention(players: Player[], username: string): string 
 }
 
 export function createHandleGradient(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) {
-  const gradient = ctx.createRadialGradient(x, y, radius * 0.4, x, y, radius);
-  gradient.addColorStop(0.0, '#575757');
-  gradient.addColorStop(0.7, '#303030');
-  gradient.addColorStop(0.9, '#7e7e7e');
-  gradient.addColorStop(1.0, '#1c1c1c');
+  const gradient = ctx.createRadialGradient(x, y, radius * 0.2, x, y, radius);
+  gradient.addColorStop(0.0, '#8a8a8a');
+  gradient.addColorStop(0.4, '#606060');
+  gradient.addColorStop(0.7, '#404040');
+  gradient.addColorStop(0.85, '#888');
+  gradient.addColorStop(0.95, '#555');
+  gradient.addColorStop(1.0, '#222');
   return gradient;
 }
 
 export function createPuckGradient(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) {
-  const gradient = ctx.createRadialGradient(x, y, radius * 0.4, x, y, radius);
-  gradient.addColorStop(0.8, '#333344');
-  gradient.addColorStop(1.0, '#111111');
+  const gradient = ctx.createRadialGradient(x, y, radius * 0.3, x, y, radius);
+  gradient.addColorStop(0.0, '#2a2a3a');
+  gradient.addColorStop(0.6, '#1a1a2a');
+  gradient.addColorStop(0.85, '#111118');
+  gradient.addColorStop(1.0, '#0a0a10');
   return gradient;
 }
 
