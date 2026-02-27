@@ -18,7 +18,6 @@ export interface LobbyCallbacks {
   onExit: () => void;
 }
 
-let isReady = false;
 let fabExpanded = false;
 let currentUsername = '';
 
@@ -30,6 +29,7 @@ export function renderLobby(
   username?: string
 ): void {
   if (username) currentUsername = username;
+  const isReady = isCurrentPlayerReady(players);
   const html = `
     <div class="lobby page-enter">
       <h2 class="lobby__title">Lobby</h2>
@@ -87,9 +87,6 @@ export function renderLobby(
 
   btnReady.addEventListener('click', () => {
     callbacks.toggleReady();
-    isReady = !isReady;
-    btnReady.className = `btn ${isReady ? 'btn-primary' : 'btn-outline'}`;
-    btnReady.textContent = isReady ? '✓ Ready' : 'Ready';
   });
 
   fabBtn.addEventListener('click', () => {
@@ -126,6 +123,14 @@ export function updateChat(messages: Message[]): void {
 export function updatePlayers(players: Player[]): void {
   const bannerEl = document.getElementById('player-banner');
   if (bannerEl) bannerEl.innerHTML = renderPlayerBanner(players);
+
+  // Sync the ready button with server state
+  const btnReady = document.getElementById('btn-ready');
+  if (btnReady) {
+    const isReady = isCurrentPlayerReady(players);
+    btnReady.className = `btn ${isReady ? 'btn-primary' : 'btn-outline'}`;
+    btnReady.textContent = isReady ? '✓ Ready' : 'Ready';
+  }
 }
 
 function renderMessages(messages: Message[]): string {
@@ -179,8 +184,13 @@ function showToast(message: string): void {
 }
 
 export function resetState(): void {
-  isReady = false;
   fabExpanded = false;
   currentUsername = '';
   colorMap.clear();
+}
+
+function isCurrentPlayerReady(players: Player[]): boolean {
+  if (!currentUsername) return false;
+  const me = players.find(p => p.username === currentUsername);
+  return me?.ready ?? false;
 }

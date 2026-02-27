@@ -1,5 +1,6 @@
 import Board, { GameObject, Position } from './board';
 import { HANDLE_RADIUS, OPPONENT_HANDLE_START_POS } from './constants';
+import { SHADOW_PAD } from './utils';
 
 export default class OpponentHandle implements GameObject {
   private board;
@@ -30,9 +31,10 @@ export default class OpponentHandle implements GameObject {
     const px = this.position.x * width;
     const py = this.position.y * height;
     const r = HANDLE_RADIUS.x * width;
+    const offset = r * (1 + SHADOW_PAD);
 
     if (this.sprite) {
-      ctx.drawImage(this.sprite, px - r, py - r);
+      ctx.drawImage(this.sprite, px - offset, py - offset);
     } else {
       // Fallback before sprite is generated
       ctx.beginPath();

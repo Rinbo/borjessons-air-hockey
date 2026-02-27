@@ -306,7 +306,7 @@
   justify-content: center;
   height: 100%;
   overflow: hidden;
-  padding-top: var(--space-5);
+  padding-top: var(--space-1);
 }
 
 .score-banner {

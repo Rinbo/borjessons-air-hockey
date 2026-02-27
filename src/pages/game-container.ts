@@ -119,6 +119,11 @@ function transitionState(newState: GameState): void {
     destroyGameView();
   }
 
+  // Reset lobby UI state when entering LOBBY from any state
+  if (newState === GameState.LOBBY) {
+    resetLobbyState();
+  }
+
   gameState = newState;
   renderCurrentState();
 }

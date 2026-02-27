@@ -9,7 +9,8 @@ import { ASPECT_RATIO, MAX_WIDTH, GAME_DURATION } from '../game/constants';
 import { trimName } from '../utils/misc-utils';
 import type { Player } from '../types';
 
-const BANNER_HEIGHTS = 68;
+// Total vertical chrome: top-banner(36) + game-view padding(4) + score-banner(48) + margin(8) + canvas border(4) = 100
+const BANNER_HEIGHTS = 100;
 const MARGIN = 10;
 
 let board: Board | null = null;

@@ -2,7 +2,7 @@ import { GOAL_ANGLE, GOAL_HEIGHT, GOAL_WIDTH, HANDLE_RADIUS, OPPONENT_HANDLE_STA
 import OpponentHandle from './opponent-handle';
 import PlayerHandle from './player-handle';
 import Puck from './puck';
-import { createHandleGradient, createPuckGradient, createSpriteCanvas } from './utils';
+import { createPlayerHandleSprite, createOpponentHandleSprite, createPuckSprite } from './utils';
 
 type Size = { width: number; height: number };
 
@@ -126,12 +126,9 @@ export default class Board {
     const handleRadius = HANDLE_RADIUS.x * this.size.width;
     const puckRadius = PUCK_RADIUS.x * this.size.width;
 
-    const handleSprite = createSpriteCanvas(handleRadius, createHandleGradient);
-    const puckSprite = createSpriteCanvas(puckRadius, createPuckGradient);
-
-    this.playerHandle.updateSprite(handleSprite);
-    this.opponentHandle.updateSprite(handleSprite);
-    this.puck.updateSprite(puckSprite);
+    this.playerHandle.updateSprite(createPlayerHandleSprite(handleRadius));
+    this.opponentHandle.updateSprite(createOpponentHandleSprite(handleRadius));
+    this.puck.updateSprite(createPuckSprite(puckRadius));
   }
 
   /**
@@ -147,68 +144,101 @@ export default class Board {
     bg.height = height;
     const ctx = bg.getContext('2d')!;
 
-    // --- Ice surface gradient ---
+    // ─── 1. Ice surface ─────────────────────────────────────────────────
     const iceGradient = ctx.createLinearGradient(0, 0, 0, height);
-    iceGradient.addColorStop(0, '#e8f0f8');
-    iceGradient.addColorStop(0.3, '#f0f5fa');
-    iceGradient.addColorStop(0.5, '#f4f8fc');
-    iceGradient.addColorStop(0.7, '#f0f5fa');
-    iceGradient.addColorStop(1, '#e8f0f8');
+    iceGradient.addColorStop(0, '#e4ecf4');
+    iceGradient.addColorStop(0.25, '#edf2f8');
+    iceGradient.addColorStop(0.5, '#f2f6fb');
+    iceGradient.addColorStop(0.75, '#edf2f8');
+    iceGradient.addColorStop(1, '#e4ecf4');
     ctx.fillStyle = iceGradient;
     ctx.fillRect(0, 0, width, height);
 
-    // --- Subtle ice texture (faint noise) ---
-    ctx.globalAlpha = 0.03;
-    for (let i = 0; i < 800; i++) {
-      const x = Math.random() * width;
-      const y = Math.random() * height;
-      const s = Math.random() * 2 + 0.5;
-      ctx.fillStyle = Math.random() > 0.5 ? '#fff' : '#ccd';
-      ctx.fillRect(x, y, s, s);
+    // Subtle cross-hatch ice scratches
+    ctx.save();
+    ctx.globalAlpha = 0.04;
+    ctx.strokeStyle = '#b8c4d0';
+    ctx.lineWidth = 0.5;
+    const scratchCount = Math.floor(width * height / 600);
+    for (let i = 0; i < scratchCount; i++) {
+      const sx = Math.random() * width;
+      const sy = Math.random() * height;
+      const angle = Math.random() * Math.PI;
+      const len = Math.random() * 15 + 5;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx + Math.cos(angle) * len, sy + Math.sin(angle) * len);
+      ctx.stroke();
     }
-    ctx.globalAlpha = 1;
+    ctx.restore();
 
-    // --- Board border / rink walls ---
-    const wallWidth = 3;
-    const cornerRadius = 16;
-    ctx.strokeStyle = '#b0b8c0';
-    ctx.lineWidth = wallWidth;
-    this.roundedRect(ctx, wallWidth / 2, wallWidth / 2, width - wallWidth, height - wallWidth, cornerRadius);
-    ctx.stroke();
+    // ─── 2. Goal creases (semi-circles around goals) ────────────────────
+    const creaseRadius = width * 0.18;
 
-    // Inner border highlight
-    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-    ctx.lineWidth = 1;
-    this.roundedRect(ctx, wallWidth + 1, wallWidth + 1, width - 2 * wallWidth - 2, height - 2 * wallWidth - 2, cornerRadius - 2);
-    ctx.stroke();
-
-    // --- Center line ---
-    ctx.setLineDash([8, 6]);
-    ctx.strokeStyle = 'rgba(180, 60, 60, 0.35)';
-    ctx.lineWidth = 1.5;
+    // Top crease
+    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(wallWidth + 4, height / 2);
-    ctx.lineTo(width - wallWidth - 4, height / 2);
+    ctx.arc(width / 2, 0, creaseRadius, 0, Math.PI);
+    ctx.fillStyle = 'rgba(200, 60, 60, 0.06)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(180, 50, 50, 0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Bottom crease
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(width / 2, height, creaseRadius, Math.PI, Math.PI * 2);
+    ctx.fillStyle = 'rgba(200, 60, 60, 0.06)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(180, 50, 50, 0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // ─── 3. Center line ─────────────────────────────────────────────────
+    ctx.save();
+    ctx.setLineDash([10, 6]);
+    ctx.strokeStyle = 'rgba(180, 50, 50, 0.30)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(4, height / 2);
+    ctx.lineTo(width - 4, height / 2);
     ctx.stroke();
     ctx.setLineDash([]);
+    ctx.restore();
 
-    // --- Center circle ---
-    const centerCircleRadius = Math.min(width, height) * 0.12;
-    ctx.strokeStyle = 'rgba(50, 100, 180, 0.25)';
-    ctx.lineWidth = 1.5;
+    // ─── 4. Center circle + dot ─────────────────────────────────────────
+    const centerCircleRadius = Math.min(width, height) * 0.13;
+
+    ctx.strokeStyle = 'rgba(40, 80, 160, 0.22)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(width / 2, height / 2, centerCircleRadius, 0, 2 * Math.PI);
     ctx.stroke();
 
     // Center dot
-    ctx.fillStyle = 'rgba(50, 100, 180, 0.3)';
+    ctx.fillStyle = 'rgba(40, 80, 160, 0.30)';
     ctx.beginPath();
-    ctx.arc(width / 2, height / 2, 3, 0, 2 * Math.PI);
+    ctx.arc(width / 2, height / 2, Math.max(3, width * 0.008), 0, 2 * Math.PI);
     ctx.fill();
 
-    // --- Goals ---
+    // ─── 5. Goals ───────────────────────────────────────────────────────
     this.drawGoal(ctx, width, height, 'top');
     this.drawGoal(ctx, width, height, 'bottom');
+
+    // ─── 6. Subtle edge vignette ────────────────────────────────────────
+    ctx.save();
+    const vigGrad = ctx.createRadialGradient(
+      width / 2, height / 2, Math.min(width, height) * 0.35,
+      width / 2, height / 2, Math.max(width, height) * 0.7
+    );
+    vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vigGrad.addColorStop(1, 'rgba(0, 0, 0, 0.06)');
+    ctx.fillStyle = vigGrad;
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
 
     this.bgCanvas = bg;
   }
@@ -221,69 +251,87 @@ export default class Board {
 
     ctx.save();
 
-    if (position === 'top') {
-      // Goal shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-      ctx.beginPath();
-      ctx.moveTo(cx - gw - 2, 0);
-      ctx.lineTo(cx - gw + ga - 2, gh + 4);
-      ctx.lineTo(cx + gw - ga + 2, gh + 4);
-      ctx.lineTo(cx + gw + 2, 0);
-      ctx.fill();
+    const isTop = position === 'top';
+    const baseY = isTop ? 0 : height;
+    const depthY = isTop ? gh : height - gh;
+    const sign = isTop ? 1 : -1;
 
-      // Goal fill
-      const goalGradient = ctx.createLinearGradient(0, 0, 0, gh);
-      goalGradient.addColorStop(0, 'rgba(200, 60, 60, 0.15)');
-      goalGradient.addColorStop(1, 'rgba(200, 60, 60, 0.05)');
-      ctx.fillStyle = goalGradient;
-      ctx.beginPath();
-      ctx.moveTo(cx - gw, 0);
-      ctx.lineTo(cx - gw + ga, gh);
-      ctx.lineTo(cx + gw - ga, gh);
-      ctx.lineTo(cx + gw, 0);
-      ctx.fill();
+    // Goal shadow (depth)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+    ctx.beginPath();
+    ctx.moveTo(cx - gw - 2, baseY);
+    ctx.lineTo(cx - gw + ga - 2, depthY + sign * 4);
+    ctx.lineTo(cx + gw - ga + 2, depthY + sign * 4);
+    ctx.lineTo(cx + gw + 2, baseY);
+    ctx.fill();
 
-      // Goal line
-      ctx.strokeStyle = 'rgba(180, 50, 50, 0.4)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx - gw, 0);
-      ctx.lineTo(cx - gw + ga, gh);
-      ctx.lineTo(cx + gw - ga, gh);
-      ctx.lineTo(cx + gw, 0);
-      ctx.stroke();
-    } else {
-      // Goal shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-      ctx.beginPath();
-      ctx.moveTo(cx - gw - 2, height);
-      ctx.lineTo(cx - gw + ga - 2, height - gh - 4);
-      ctx.lineTo(cx + gw - ga + 2, height - gh - 4);
-      ctx.lineTo(cx + gw + 2, height);
-      ctx.fill();
+    // Goal interior (dark net area)
+    const netGrad = isTop
+      ? ctx.createLinearGradient(0, baseY, 0, depthY)
+      : ctx.createLinearGradient(0, baseY, 0, depthY);
+    netGrad.addColorStop(0, 'rgba(30, 30, 40, 0.35)');
+    netGrad.addColorStop(1, 'rgba(30, 30, 40, 0.10)');
+    ctx.fillStyle = netGrad;
+    ctx.beginPath();
+    ctx.moveTo(cx - gw, baseY);
+    ctx.lineTo(cx - gw + ga, depthY);
+    ctx.lineTo(cx + gw - ga, depthY);
+    ctx.lineTo(cx + gw, baseY);
+    ctx.fill();
 
-      // Goal fill
-      const goalGradient = ctx.createLinearGradient(0, height, 0, height - gh);
-      goalGradient.addColorStop(0, 'rgba(200, 60, 60, 0.15)');
-      goalGradient.addColorStop(1, 'rgba(200, 60, 60, 0.05)');
-      ctx.fillStyle = goalGradient;
-      ctx.beginPath();
-      ctx.moveTo(cx - gw, height);
-      ctx.lineTo(cx - gw + ga, height - gh);
-      ctx.lineTo(cx + gw - ga, height - gh);
-      ctx.lineTo(cx + gw, height);
-      ctx.fill();
+    // Net pattern (horizontal lines)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx - gw, baseY);
+    ctx.lineTo(cx - gw + ga, depthY);
+    ctx.lineTo(cx + gw - ga, depthY);
+    ctx.lineTo(cx + gw, baseY);
+    ctx.clip();
 
-      // Goal line
-      ctx.strokeStyle = 'rgba(180, 50, 50, 0.4)';
-      ctx.lineWidth = 1.5;
+    const netLines = 4;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 0.5;
+    for (let i = 1; i <= netLines; i++) {
+      const frac = i / (netLines + 1);
+      const ly = isTop ? baseY + (depthY - baseY) * frac : baseY + (depthY - baseY) * frac;
       ctx.beginPath();
-      ctx.moveTo(cx - gw, height);
-      ctx.lineTo(cx - gw + ga, height - gh);
-      ctx.lineTo(cx + gw - ga, height - gh);
-      ctx.lineTo(cx + gw, height);
+      ctx.moveTo(cx - gw + ga * frac, ly);
+      ctx.lineTo(cx + gw - ga * frac, ly);
       ctx.stroke();
     }
+
+    // Net pattern (vertical lines)
+    const vertLines = 6;
+    for (let i = 1; i <= vertLines; i++) {
+      const frac = i / (vertLines + 1);
+      const lx = (cx - gw + ga) + ((cx + gw - ga) - (cx - gw + ga)) * frac;
+      ctx.beginPath();
+      ctx.moveTo(cx - gw + (cx + gw - (cx - gw)) * frac, baseY);
+      ctx.lineTo(lx, depthY);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Goal frame line
+    ctx.strokeStyle = 'rgba(140, 40, 40, 0.45)';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - gw, baseY);
+    ctx.lineTo(cx - gw + ga, depthY);
+    ctx.lineTo(cx + gw - ga, depthY);
+    ctx.lineTo(cx + gw, baseY);
+    ctx.stroke();
+
+    // Frame highlight
+    ctx.strokeStyle = 'rgba(255, 100, 100, 0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - gw + 1, baseY);
+    ctx.lineTo(cx - gw + ga + 1, depthY + sign * 1);
+    ctx.lineTo(cx + gw - ga - 1, depthY + sign * 1);
+    ctx.lineTo(cx + gw - 1, baseY);
+    ctx.stroke();
 
     ctx.restore();
   }
