@@ -4,8 +4,8 @@
 
 A high-performance web application that delivers a smooth, responsive air hockey
 experience over WebSockets. Players create or join game rooms, compete in
-real-time 1v1 matches, and track scores — all from a mobile or desktop browser
-with zero installs required.
+real-time 1v1 matches, or play against an AI — all from a mobile or desktop
+browser with zero installs required.
 
 ---
 
@@ -19,6 +19,7 @@ with zero installs required.
 - [Project Structure](#project-structure)
 - [Networking & Protocol](#networking--protocol)
 - [Performance Optimizations](#performance-optimizations)
+- [Testing](#testing)
 - [Deployment](#deployment)
 - [License](#license)
 
@@ -45,13 +46,14 @@ adaptable for a future PixiJS rendering layer.
 | Category              | Details                                                                               |
 | --------------------- | ------------------------------------------------------------------------------------- |
 | **Multiplayer**       | Real-time 1v1 matches with server-authoritative game state                            |
+| **Single Player**     | Play against a built-in AI bot directly from the game lobby                           |
 | **Game Lobby**        | Create rooms, browse available games, join with one tap                               |
 | **Live Chat**         | In-lobby chat via STOMP messaging with per-user color coding                          |
 | **Score Tracking**    | Per-match and cumulative score display with winner announcement                       |
 | **Touch & Mouse**     | Full support for both pointer and touch input with drag-based handle control          |
 | **Responsive Canvas** | Board dynamically resizes to fit any viewport while preserving the 0.625 aspect ratio |
 | **Online Presence**   | See who is currently online                                                           |
-| **Board Graphics**    | Ice-rink surface with center circle, rink markings, 3D goals, and metallic handles    |
+| **Board Graphics**    | High-fidelity ice-rink surface with cross-hatch scratches, 3D goals, and vignette      |
 
 ---
 
@@ -73,7 +75,7 @@ adaptable for a future PixiJS rendering layer.
 │              Game Server (air-hockey-server)              │
 │                                                          │
 │  REST API · STOMP Broker · Binary WebSocket Handler      │
-│  Game Engine · Physics · Collision Detection              │
+│  Game Engine · Physics · Collision Detection · AI Bot     │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -91,6 +93,7 @@ directly to future PixiJS scenes.
 | **UI**                | Vanilla TypeScript (DOM manipulation)                   |
 | **Routing**           | Custom hash-based router with `:id` params              |
 | **Build Tool**        | Vite 4                                                  |
+| **Testing**           | Vitest                                                  |
 | **Canvas Rendering**  | HTML5 Canvas 2D API                                     |
 | **WebSocket (game)**  | Native `WebSocket` with binary (`ArrayBuffer`) protocol |
 | **WebSocket (lobby)** | STOMP over SockJS (`@stomp/stompjs`)                    |
@@ -153,14 +156,15 @@ src/
 │   ├── opponent-handle.ts #   Opponent handle rendering
 │   ├── player-handle.ts   #   Player handle with touch/mouse input
 │   ├── puck.ts        #   Puck rendering
-│   └── utils.ts       #   Sprite generation, gradient helpers
+│   ├── utils.ts       #   Sprite generation, gradient helpers
+│   └── game-logic.test.ts #  Unit tests for game constants and logic
 ├── pages/             # Page controllers (mount/unmount lifecycle)
 │   ├── landing.ts     #   Home page with hero title and navigation
 │   ├── choose-name.ts #   Username entry with validation
 │   ├── available-games.ts #   Browse and join games
 │   ├── game-container.ts  #   Game state machine (lobby → game → score)
 │   ├── game-view.ts   #   Canvas setup, score banner, rAF loop
-│   ├── lobby.ts       #   Chat, ready toggle, FAB menu
+│   ├── lobby.ts       #   Chat, ready toggle, FAB menu, AI button
 │   ├── online-users.ts #   Online user grid with avatars
 │   ├── generate-room.ts #  UUID room generation + redirect
 │   └── error.ts       #   Error display
@@ -171,7 +175,12 @@ src/
 │   ├── pages.css      #   Page-specific layouts
 │   └── animations.css #   Particles, ripple, fades, transitions
 ├── utils/             # General utilities (WebSocket helpers, misc)
+│   ├── misc-utils.test.ts #  Unit tests for utilities
+│   ├── misc-utils.ts      #  Local storage and UUID helpers
+│   ├── time-utils.ts      #  Date and time formatting
+│   └── websocket-utils.ts #  Binary data parsing helpers
 ├── router.ts          # Hash-based router with param matching
+├── router.test.ts     # Unit tests for the router
 ├── stomp-connection.ts # STOMP/SockJS connection manager
 ├── types.ts           # Shared types (GameState, Player, Message)
 └── main.ts            # Entry point: style imports, route registration
@@ -206,6 +215,9 @@ transitions) use STOMP messaging. Topics include:
 - `/topic/games` — available game list broadcast
 - `/topic/users` — online user list updates
 
+Action endpoints:
+- `/app/game/{id}/add-ai` — adds an AI opponent to the game
+
 ---
 
 ## Performance Optimizations
@@ -217,6 +229,9 @@ The client implements several techniques to ensure smooth 60 FPS gameplay:
   jitter
 - **Client-side interpolation** — positions are linearly interpolated between
   the two most recent server states, smoothing movement at the visual level
+- **High-Fidelity Rendering** — the ice surface features a linear gradient,
+  subtle cross-hatch scratches, 3D goal rendering with net patterns, and an edge
+  vignette for depth
 - **Pre-rendered sprite caching** — handle and puck graphics are drawn once to
   off-screen canvases and reused via `drawImage`, avoiding redundant
   gradient/path operations per frame
@@ -225,11 +240,27 @@ The client implements several techniques to ensure smooth 60 FPS gameplay:
   repeated draw calls for static elements
 - **Minimal DOM updates** — the game timer only updates the DOM when the
   displayed second changes; score updates are targeted element replacements
-  rather than full re-renders
 - **Touch/pointer event optimization** — input listeners are managed with proper
   cleanup to prevent memory leaks
 - **Zero-dependency UI** — no framework runtime overhead; the entire production
   JS bundle is ~35 KB gzipped
+
+---
+
+## Testing
+
+The project uses [Vitest](https://vitest.dev/) for unit testing game logic,
+utility functions, and the router.
+
+Run all tests:
+```bash
+npm test
+```
+
+Watch mode:
+```bash
+npm run test:watch
+```
 
 ---
 

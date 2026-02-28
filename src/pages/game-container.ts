@@ -140,6 +140,9 @@ function renderCurrentState(): void {
         toggleReady: () => {
           stomp?.publish(`/app/game/${gameId}/toggle-ready`, '');
         },
+        addAi: () => {
+          stomp?.publish(`/app/game/${gameId}/add-ai`, '');
+        },
         onExit: () => navigate('/')
       }, username);
       break;

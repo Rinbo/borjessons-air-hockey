@@ -15,6 +15,7 @@ const CLIPBOARD_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="no
 export interface LobbyCallbacks {
   sendMessage: (message: string) => void;
   toggleReady: () => void;
+  addAi: () => void;
   onExit: () => void;
 }
 
@@ -38,6 +39,7 @@ export function renderLobby(
         <button class="btn ${isReady ? 'btn-primary' : 'btn-outline'}" id="btn-ready">
           ${isReady ? '✓ Ready' : 'Ready'}
         </button>
+        ${players.length < 2 ? '<button class="btn btn-outline" id="btn-add-ai">🤖 Play vs AI</button>' : ''}
         <div class="fab-container" id="fab-container">
           <button class="fab" id="fab-btn" title="Settings">${SETTINGS_ICON}</button>
           <button class="fab-item" id="fab-copy" title="Copy link">${CLIPBOARD_ICON}</button>
@@ -103,6 +105,11 @@ export function renderLobby(
   });
 
   fabExit.addEventListener('click', () => callbacks.onExit());
+
+  const btnAddAi = document.getElementById('btn-add-ai');
+  if (btnAddAi) {
+    btnAddAi.addEventListener('click', () => callbacks.addAi());
+  }
 
   // Close fab on outside click
   document.addEventListener('click', (e) => {
