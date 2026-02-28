@@ -12,7 +12,7 @@ export const OPPONENT_HANDLE_START_POS: Position = { x: 0.5, y: 0.2 };
 export const HANDLE_RADIUS: Radius = { x: 0.09, y: 0.09 * ASPECT_RATIO };
 export const PUCK_RADIUS: Radius = { x: 0.06, y: 0.06 * ASPECT_RATIO };
 export const UPDATE_RATE = 3;
-export const GOAL_WIDTH = 0.15;
+export const GOAL_WIDTH = 0.18;
 export const GOAL_HEIGHT = 0.015;
 export const GOAL_ANGLE = 0.03;
 
