@@ -6,7 +6,7 @@ import { createPlayerHandleSprite, createOpponentHandleSprite, createPuckSprite 
 
 type Size = { width: number; height: number };
 
-export type BroadcastState = { opponent: Position; puck: Position; remainingSeconds: number };
+export type BroadcastState = { opponent: Position; puck: Position; remainingSeconds: number; collisionEvent: number };
 export type Position = { x: number; y: number };
 export type Radius = Position;
 

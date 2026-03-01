@@ -6,6 +6,7 @@ import { navigate } from '../router';
 import { StompConnection } from '../stomp-connection';
 import { pingListener } from '../utils/websocket-utils';
 import { trimName } from '../utils/misc-utils';
+import { soundEngine } from '../game/sound-engine';
 import { GameState } from '../types';
 import type { Player, Message } from '../types';
 import { renderLobby, updateChat, updatePlayers, resetState as resetLobbyState } from './lobby';
@@ -62,6 +63,7 @@ export async function mount(container: HTMLElement, params: Record<string, strin
 
   try {
     await stomp.connect();
+    soundEngine.init(); // Safe to init after user has interacted (navigated here)
   } catch (_) {
     if (contentEl) {
       contentEl.innerHTML = '<div class="status-screen"><span class="status-screen__text">Unable to connect :(</span></div>';
@@ -76,8 +78,17 @@ export async function mount(container: HTMLElement, params: Record<string, strin
   // Subscribe to game topics
   subscriptions.push(
     stomp.subscribe(`/topic/game/${gameId}/chat`, (msg) => {
-      messages = [{ ...JSON.parse(msg.body), datetime: new Date() }, ...messages];
+      const parsed = { ...JSON.parse(msg.body), datetime: new Date() };
+      messages = [parsed, ...messages];
       if (gameState === GameState.LOBBY) updateChat(messages);
+
+      // Countdown tick sounds — server sends "Game starts in 3/2/1"
+      if (typeof parsed.message === 'string' && parsed.message.startsWith('Game starts in ')) {
+        const num = parseInt(parsed.message.replace('Game starts in ', ''), 10);
+        if (!isNaN(num)) {
+          soundEngine.playCountdownTick(num === 0);
+        }
+      }
     }),
 
     stomp.subscribe(`/topic/game/${gameId}/players`, (msg) => {
@@ -122,6 +133,11 @@ function transitionState(newState: GameState): void {
   // Reset lobby UI state when entering LOBBY from any state
   if (newState === GameState.LOBBY) {
     resetLobbyState();
+  }
+
+  // Sound effects for state transitions
+  if (newState === GameState.SCORE_SCREEN) {
+    soundEngine.playGameOver();
   }
 
   gameState = newState;

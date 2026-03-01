@@ -5,6 +5,7 @@
 import Board, { BroadcastState } from '../game/board';
 import GameWebSocket from '../game/game-websocket';
 import { getAgencyExtention } from '../game/utils';
+import { soundEngine, CollisionEvent } from '../game/sound-engine';
 import { ASPECT_RATIO, MAX_WIDTH, GAME_DURATION } from '../game/constants';
 import { trimName } from '../utils/misc-utils';
 import type { Player } from '../types';
@@ -67,6 +68,14 @@ export function renderGameView(
   // Receive board state
   gameWs.onBoardState((state: BroadcastState) => {
     board!.update(state);
+
+    // Sound effects based on collision event
+    soundEngine.playCollision(state.collisionEvent);
+
+    // Haptic feedback on goal (Android only — Safari ignores vibrate)
+    if ((state.collisionEvent & CollisionEvent.GOAL) && 'vibrate' in navigator) {
+      navigator.vibrate([100, 50, 100]);
+    }
 
     const seconds = Math.ceil(state.remainingSeconds);
     if (seconds !== lastRenderedSeconds) {
