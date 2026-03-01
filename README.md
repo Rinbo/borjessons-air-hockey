@@ -27,7 +27,7 @@ browser with zero installs required.
 
 ## Overview
 
-Börjessons Air Hockey is a client–server multiplayer game designed for
+Borjessons Air Hockey is a client–server multiplayer game designed for
 commercial distribution. The client is a single-page application built with
 **vanilla TypeScript**, **HTML5 Canvas**, and a custom **CSS design system**
 following a Nordic Minimal aesthetic. It communicates with a dedicated
@@ -53,7 +53,7 @@ adaptable for a future PixiJS rendering layer.
 | **Touch & Mouse**     | Full support for both pointer and touch input with drag-based handle control          |
 | **Responsive Canvas** | Board dynamically resizes to fit any viewport while preserving the 0.625 aspect ratio |
 | **Online Presence**   | See who is currently online                                                           |
-| **Board Graphics**    | High-fidelity ice-rink surface with cross-hatch scratches, 3D goals, and vignette      |
+| **Board Graphics**    | High-fidelity ice-rink surface with cross-hatch scratches, 3D goals, and vignette     |
 
 ---
 
@@ -216,6 +216,7 @@ transitions) use STOMP messaging. Topics include:
 - `/topic/users` — online user list updates
 
 Action endpoints:
+
 - `/app/game/{id}/add-ai` — adds an AI opponent to the game
 
 ---
@@ -253,11 +254,13 @@ The project uses [Vitest](https://vitest.dev/) for unit testing game logic,
 utility functions, and the router.
 
 Run all tests:
+
 ```bash
 npm test
 ```
 
 Watch mode:
+
 ```bash
 npm run test:watch
 ```
@@ -266,4 +269,4 @@ npm run test:watch
 
 ## License
 
-Copyright © 2023–2026 Börjessons. All rights reserved.
+Copyright © 2023–2026 Dockside Labs AB. All rights reserved.

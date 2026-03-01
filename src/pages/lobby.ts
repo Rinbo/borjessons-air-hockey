@@ -5,12 +5,12 @@
 import { trimName } from '../utils/misc-utils';
 import { formatTime } from '../utils/time-utils';
 import type { Message, Player } from '../types';
-import sendIcon from '../assets/svg/send.svg';
 
-// SVG icons as inline strings (replacing react-icons)
-const SETTINGS_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 1.3 2.2a1 1 0 0 1-.1 1.1l-1.6 1.6a1 1 0 0 1-1.1.1L15.7 18.7a7.7 7.7 0 0 1-1.7 1V22a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2.3a7.7 7.7 0 0 1-1.7-1L6 19.9a1 1 0 0 1-1.1-.1l-1.6-1.6a1 1 0 0 1-.1-1.1L4.6 15a7.7 7.7 0 0 1-1-1.7H2a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2.3a7.7 7.7 0 0 1 1-1.7L3.1 6a1 1 0 0 1 .1-1.1l1.6-1.6a1 1 0 0 1 1.1-.1L8.3 5.3a7.7 7.7 0 0 1 1.7-1V2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2.3a7.7 7.7 0 0 1 1.7 1L18 3.1a1 1 0 0 1 1.1.1l1.6 1.6a1 1 0 0 1 .1 1.1L19.4 9a7.7 7.7 0 0 1 1 1.7H22a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2.3a7.7 7.7 0 0 1-1 1.7Z"/></svg>`;
-const EXIT_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`;
-const CLIPBOARD_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+// Inline SVG icons
+const SEND_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
+const COPY_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const EXIT_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`;
+const ROBOT_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>`;
 
 export interface LobbyCallbacks {
   sendMessage: (message: string) => void;
@@ -19,7 +19,7 @@ export interface LobbyCallbacks {
   onExit: () => void;
 }
 
-let fabExpanded = false;
+let menuOpen = false;
 let currentUsername = '';
 
 export function renderLobby(
@@ -39,11 +39,17 @@ export function renderLobby(
         <button class="btn ${isReady ? 'btn-primary' : 'btn-outline'}" id="btn-ready">
           ${isReady ? '✓ Ready' : 'Ready'}
         </button>
-        ${players.length < 2 ? '<button class="btn btn-outline" id="btn-add-ai">🤖 Play vs AI</button>' : ''}
-        <div class="fab-container" id="fab-container">
-          <button class="fab" id="fab-btn" title="Settings">${SETTINGS_ICON}</button>
-          <button class="fab-item" id="fab-copy" title="Copy link">${CLIPBOARD_ICON}</button>
-          <button class="fab-item" id="fab-exit" title="Exit">${EXIT_ICON}</button>
+        <div class="lobby__toolbar-right">
+          ${players.length < 2 ? `<button class="btn btn-outline btn-sm" id="btn-add-ai">${ROBOT_ICON} Play vs AI</button>` : ''}
+          <div class="action-menu" id="action-menu">
+            <button class="action-menu__trigger" id="menu-trigger" title="More actions">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </button>
+            <div class="action-menu__dropdown" id="menu-dropdown">
+              <button class="action-menu__item" id="menu-copy">${COPY_ICON} Copy link</button>
+              <button class="action-menu__item action-menu__item--danger" id="menu-exit">${EXIT_ICON} Leave game</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -58,7 +64,7 @@ export function renderLobby(
       <div class="lobby__input-row">
         <input class="input" id="chat-input" placeholder="Write something..." autocomplete="off" />
         <button class="btn btn-primary btn-icon" id="btn-send" title="Send">
-          <img src="${sendIcon}" alt="Send" />
+          ${SEND_ICON}
         </button>
       </div>
     </div>
@@ -70,9 +76,10 @@ export function renderLobby(
   const chatInput = document.getElementById('chat-input') as HTMLInputElement;
   const btnSend = document.getElementById('btn-send')!;
   const btnReady = document.getElementById('btn-ready')!;
-  const fabBtn = document.getElementById('fab-btn')!;
-  const fabCopy = document.getElementById('fab-copy')!;
-  const fabExit = document.getElementById('fab-exit')!;
+  const menuTrigger = document.getElementById('menu-trigger')!;
+  const menuDropdown = document.getElementById('menu-dropdown')!;
+  const menuCopy = document.getElementById('menu-copy')!;
+  const menuExit = document.getElementById('menu-exit')!;
 
   const handleSend = () => {
     const msg = chatInput.value.trim();
@@ -91,33 +98,35 @@ export function renderLobby(
     callbacks.toggleReady();
   });
 
-  fabBtn.addEventListener('click', () => {
-    fabExpanded = !fabExpanded;
-    fabBtn.classList.toggle('is-spinning');
-    setTimeout(() => fabBtn.classList.remove('is-spinning'), 500);
-    fabCopy.classList.toggle('is-visible', fabExpanded);
-    fabExit.classList.toggle('is-visible', fabExpanded);
+  menuTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuOpen = !menuOpen;
+    menuDropdown.classList.toggle('is-open', menuOpen);
   });
 
-  fabCopy.addEventListener('click', () => {
+  menuCopy.addEventListener('click', () => {
     navigator.clipboard.writeText(window.location.href);
     showToast('URL copied');
+    menuOpen = false;
+    menuDropdown.classList.remove('is-open');
   });
 
-  fabExit.addEventListener('click', () => callbacks.onExit());
+  menuExit.addEventListener('click', () => {
+    menuOpen = false;
+    callbacks.onExit();
+  });
 
   const btnAddAi = document.getElementById('btn-add-ai');
   if (btnAddAi) {
     btnAddAi.addEventListener('click', () => callbacks.addAi());
   }
 
-  // Close fab on outside click
+  // Close menu on outside click
   document.addEventListener('click', (e) => {
-    const fabContainer = document.getElementById('fab-container');
-    if (fabExpanded && fabContainer && !fabContainer.contains(e.target as Node)) {
-      fabExpanded = false;
-      fabCopy.classList.remove('is-visible');
-      fabExit.classList.remove('is-visible');
+    const actionMenu = document.getElementById('action-menu');
+    if (menuOpen && actionMenu && !actionMenu.contains(e.target as Node)) {
+      menuOpen = false;
+      menuDropdown.classList.remove('is-open');
     }
   });
 }
@@ -168,8 +177,8 @@ function escapeHtml(text: string): string {
   return div.innerHTML;
 }
 
-// Muted Nordic palette — earthy, soft tones that pair with the off-white/teal theme
-const CHAT_PALETTE = ['#8a6542', '#5b7a8a', '#8b6f7d', '#6b8f71'];
+// Warm earthy palette for light backgrounds
+const CHAT_PALETTE = ['#c4873b', '#5b8a6d', '#8b6b8a', '#5a7f96'];
 const colorMap = new Map<string, string>();
 
 function usernameToColor(name: string): string {
@@ -191,7 +200,7 @@ function showToast(message: string): void {
 }
 
 export function resetState(): void {
-  fabExpanded = false;
+  menuOpen = false;
   currentUsername = '';
   colorMap.clear();
 }

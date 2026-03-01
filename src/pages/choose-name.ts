@@ -20,7 +20,7 @@ export function mount(container: HTMLElement): void {
   container.innerHTML = `
     <div class="choose-name page-enter">
       <div class="top-banner" id="banner-home">
-        <span class="top-banner__back">‹</span>
+        <span class="top-banner__back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>
         <span class="top-banner__text">borjessons air hockey</span>
       </div>
 
