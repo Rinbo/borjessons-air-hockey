@@ -2,12 +2,32 @@
    Landing Page
    =================================================== */
 
+import { isAuthenticated, getUser, logout, onAuthChange } from '../auth/auth-service';
 import { navigate } from '../router';
 
+let unsubscribe: (() => void) | null = null;
+
 export function mount(container: HTMLElement): void {
+  // Not logged in? Redirect to login
+  if (!isAuthenticated()) {
+    navigate('/login');
+    return;
+  }
+
+  const user = getUser()!;
+  const initial = user.displayName.charAt(0).toUpperCase();
+
   container.innerHTML = `
     <div class="landing page-enter">
       <div class="landing__bg"></div>
+
+      <div class="landing__user-bar">
+        <div class="landing__user-info">
+          <div class="landing__user-avatar">${initial}</div>
+          <span class="landing__user-name">${user.displayName}</span>
+        </div>
+        <button class="btn btn-sm btn-outline" id="btn-sign-out">Sign out</button>
+      </div>
 
       <div class="landing__header">
         <div class="landing__subtitle">BORJESSONS</div>
@@ -49,17 +69,28 @@ export function mount(container: HTMLElement): void {
           See who is online
         </button>
       </div>
-
-      <button class="landing__clear" id="btn-clear">Clear localStorage</button>
     </div>
   `;
 
   document.getElementById('btn-join')!.addEventListener('click', () => navigate('/games'));
   document.getElementById('btn-create')!.addEventListener('click', () => navigate('/games/new'));
   document.getElementById('btn-online')!.addEventListener('click', () => navigate('/games/online'));
-  document.getElementById('btn-clear')!.addEventListener('click', () => localStorage.removeItem('username'));
+  document.getElementById('btn-sign-out')!.addEventListener('click', () => {
+    logout();
+    navigate('/login');
+  });
+
+  // If auth state changes while on this page (e.g. token expired), redirect
+  unsubscribe = onAuthChange(() => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+    }
+  });
 }
 
 export function unmount(): void {
-  // No cleanup needed
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
 }

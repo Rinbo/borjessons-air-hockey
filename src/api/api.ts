@@ -1,4 +1,5 @@
 import properties from '../config/properties';
+import { getToken } from '../auth/auth-service';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -6,6 +7,7 @@ interface RequestOptions {
   method: HttpMethod;
   headers?: { [key: string]: string };
   body?: string;
+  credentials?: RequestCredentials;
 }
 
 const statusError = (status: number): Error => new Error(`HTTP error! status: ${status}`);
@@ -52,9 +54,20 @@ export async function put<T>(path: string, data: T): Promise<T> {
 }
 
 function getRequestOptions<T>(httpMethod: HttpMethod, data?: T): RequestOptions {
+  const headers: { [key: string]: string } = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json'
+  };
+
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   return {
     method: httpMethod,
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: data ? JSON.stringify(data) : undefined
+    headers,
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: 'include'
   };
 }
