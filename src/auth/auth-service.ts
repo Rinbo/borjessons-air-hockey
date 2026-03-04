@@ -88,6 +88,16 @@ export async function tryRefresh(): Promise<boolean> {
 }
 
 /**
+ * Get the game server username: firstName$gatewayUserId.
+ * The game server uses '$' as separator — getTrimmed() returns the first part for display.
+ */
+export function getGameUsername(): string | null {
+  if (!currentUser) return null;
+  const firstName = currentUser.displayName.split(' ')[0];
+  return `${firstName}$${currentUser.id}`;
+}
+
+/**
  * Clear the current session.
  */
 export function logout(): void {

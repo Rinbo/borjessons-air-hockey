@@ -7,6 +7,7 @@ import { get } from '../api/api';
 import { StompConnection } from '../stomp-connection';
 import { pingListener } from '../utils/websocket-utils';
 import { trimName } from '../utils/misc-utils';
+import { getGameUsername } from '../auth/auth-service';
 import type { StompSubscription } from '@stomp/stompjs';
 
 let stomp: StompConnection | null = null;
@@ -16,9 +17,9 @@ let container: HTMLElement | null = null;
 export async function mount(el: HTMLElement): Promise<void> {
   container = el;
 
-  const savedUsername = localStorage.getItem('username');
-  if (!savedUsername) {
-    navigate('/choose-a-name');
+  const gameUsername = getGameUsername();
+  if (!gameUsername) {
+    navigate('/login');
     return;
   }
 
@@ -54,8 +55,8 @@ export async function mount(el: HTMLElement): Promise<void> {
     return;
   }
 
-  stomp.publish('/app/users/enter', savedUsername);
-  pingListener(savedUsername, stomp);
+  stomp.publish('/app/users/enter', gameUsername);
+  pingListener(gameUsername, stomp);
 
   // Fetch initial users
   try {
@@ -70,7 +71,7 @@ export async function mount(el: HTMLElement): Promise<void> {
     renderUsers(JSON.parse(message.body));
   });
 
-  const beforeUnload = () => stomp?.publish('/app/users/exit', savedUsername);
+  const beforeUnload = () => stomp?.publish('/app/users/exit', gameUsername);
   window.addEventListener('beforeunload', beforeUnload);
   (el as any).__beforeUnload = beforeUnload;
 }
@@ -137,7 +138,7 @@ export function unmount(): void {
   if (container) {
     const beforeUnload = (container as any).__beforeUnload;
     if (beforeUnload) {
-      stomp?.publish('/app/users/exit', localStorage.getItem('username') || '');
+      stomp?.publish('/app/users/exit', getGameUsername() || '');
       window.removeEventListener('beforeunload', beforeUnload);
     }
   }

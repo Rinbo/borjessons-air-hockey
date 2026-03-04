@@ -7,6 +7,8 @@ import { StompConnection } from '../stomp-connection';
 import { pingListener } from '../utils/websocket-utils';
 import { trimName } from '../utils/misc-utils';
 import { soundEngine } from '../game/sound-engine';
+import { getUser, getGameUsername } from '../auth/auth-service';
+import { refreshTrialState } from '../auth/trial-service';
 import { GameState } from '../types';
 import type { Player, Message } from '../types';
 import { renderLobby, updateChat, updatePlayers, resetState as resetLobbyState } from './lobby';
@@ -28,12 +30,12 @@ export async function mount(container: HTMLElement, params: Record<string, strin
   gameId = params.id;
 
   // Auth guard
-  const savedUsername = localStorage.getItem('username');
-  if (!savedUsername) {
-    navigate('/choose-a-name');
+  const gameUsername = getGameUsername();
+  if (!gameUsername) {
+    navigate('/login');
     return;
   }
-  username = savedUsername;
+  username = gameUsername;
 
   // Reset state
   gameState = GameState.LOBBY;
@@ -72,8 +74,8 @@ export async function mount(container: HTMLElement, params: Record<string, strin
   }
 
   // Publish user enter and heartbeat
-  stomp.publish('/app/users/enter', savedUsername);
-  pingListener(savedUsername, stomp);
+  stomp.publish('/app/users/enter', username);
+  pingListener(username, stomp);
 
   // Subscribe to game topics
   subscriptions.push(
@@ -108,8 +110,13 @@ export async function mount(container: HTMLElement, params: Record<string, strin
     })
   );
 
-  // Connect to game
-  stomp.publish(`/app/game/${gameId}/connect`, JSON.stringify({ username, message: '' }));
+  // Connect to game — include gatewayUserId for trial counter tracking
+  const authUser = getUser();
+  stomp.publish(`/app/game/${gameId}/connect`, JSON.stringify({
+    username,
+    message: '',
+    gatewayUserId: authUser?.id ?? null
+  }));
 
   // Cleanup on page unload
   const beforeUnload = () => {
@@ -205,10 +212,36 @@ function renderScoreScreen(): void {
     </div>
   `;
 
-  document.getElementById('btn-back-lobby')!.addEventListener('click', () => {
-    resetLobbyState();
-    transitionState(GameState.LOBBY);
+  // Check trial status — if exhausted, show paywall modal over score screen
+  refreshTrialState().then(trial => {
+    if (trial && !trial.canPlay) {
+      showTrialExpiredModal();
+    } else {
+      document.getElementById('btn-back-lobby')?.addEventListener('click', () => {
+        resetLobbyState();
+        transitionState(GameState.LOBBY);
+      });
+    }
   });
+}
+
+function showTrialExpiredModal(): void {
+  if (!contentEl) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal">
+      <h2>You've used all 3 free games</h2>
+      <p style="color: var(--text-secondary)">Unlock unlimited games for just 39 SEK — play as much as you want, forever.</p>
+      <button class="btn btn-primary btn-lg" id="btn-unlock" disabled>Unlock for 39 SEK</button>
+      <p class="paywall-note">Payment integration coming soon</p>
+      <button class="btn btn-outline btn-sm" id="btn-exit-paywall" style="margin-top: var(--space-2)">Leave</button>
+    </div>
+  `;
+  contentEl.appendChild(modal);
+
+  document.getElementById('btn-exit-paywall')?.addEventListener('click', () => navigate('/'));
 }
 
 function renderMessage(message: string, actionName: string, action: () => void): void {

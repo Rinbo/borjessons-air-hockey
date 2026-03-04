@@ -18,7 +18,6 @@ import { tryRefresh } from './auth/auth-service';
 // Pages
 import * as landing from './pages/landing';
 import * as login from './pages/login';
-import * as chooseName from './pages/choose-name';
 import * as availableGames from './pages/available-games';
 import * as generateRoom from './pages/generate-room';
 import * as gameContainer from './pages/game-container';
@@ -31,7 +30,6 @@ document.cookie = `SameSite=None;Secure`;
 // Register routes
 addRoute('/', landing.mount, landing.unmount);
 addRoute('/login', login.mount, login.unmount);
-addRoute('/choose-a-name', chooseName.mount, chooseName.unmount);
 addRoute('/games', availableGames.mount, availableGames.unmount);
 addRoute('/games/new', generateRoom.mount, generateRoom.unmount);
 addRoute('/games/online', onlineUsers.mount, onlineUsers.unmount);

@@ -5,7 +5,7 @@
 import { navigate } from '../router';
 import { StompConnection } from '../stomp-connection';
 import { pingListener } from '../utils/websocket-utils';
-import { setReturnPath, setMessage } from './choose-name';
+import { getGameUsername } from '../auth/auth-service';
 
 let stomp: StompConnection | null = null;
 let username: string = '';
@@ -32,17 +32,14 @@ export function setChildUnmount(fn: (() => void) | null): void {
 }
 
 export async function mount(container: HTMLElement, params: Record<string, string>): Promise<void> {
-  const savedUsername = localStorage.getItem('username');
+  const gameUsername = getGameUsername();
 
-  if (!savedUsername) {
-    const currentHash = window.location.hash.slice(1) || '/';
-    setReturnPath(currentHash);
-    setMessage('Choose a name to continue');
-    navigate('/choose-a-name');
+  if (!gameUsername) {
+    navigate('/login');
     return;
   }
 
-  username = savedUsername;
+  username = gameUsername;
 
   // Render layout
   container.innerHTML = `
@@ -79,12 +76,12 @@ export async function mount(container: HTMLElement, params: Record<string, strin
   }
 
   // Publish user enter and set up heartbeat
-  stomp.publish('/app/users/enter', savedUsername);
-  pingListener(savedUsername, stomp);
+  stomp.publish('/app/users/enter', gameUsername);
+  pingListener(gameUsername, stomp);
 
   // Cleanup on page unload
   const beforeUnload = () => {
-    stomp?.publish('/app/users/exit', savedUsername);
+    stomp?.publish('/app/users/exit', gameUsername);
   };
   window.addEventListener('beforeunload', beforeUnload);
 
