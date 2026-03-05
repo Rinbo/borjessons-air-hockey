@@ -1,5 +1,6 @@
 import { BroadcastState, Position } from './board';
 import properties from '../config/properties';
+import { getToken } from '../auth/auth-service';
 
 /**
  * Raw WebSocket connection for the high-frequency game board-state channel.
@@ -17,10 +18,12 @@ export default class GameWebSocket {
 
   public connect(gameId: string, agency: string): void {
     const { wsBaseUrl } = properties();
+    const token = getToken();
     // Derive the raw WS URL from the existing base URL
-    // e.g., http://localhost:8080/ws → ws://localhost:8080/ws/game/{gameId}/{agency}
+    // e.g., http://localhost:8080/ws → ws://localhost:8080/ws/game/{gameId}/{agency}?token={jwt}
     const baseUrl = wsBaseUrl.replace(/^http/, 'ws').replace(/\/ws\/?$/, '');
-    const url = `${baseUrl}/ws/game/${gameId}/${agency}`;
+    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
+    const url = `${baseUrl}/ws/game/${gameId}/${agency}${tokenParam}`;
 
     this.ws = new WebSocket(url);
     this.ws.binaryType = 'arraybuffer';

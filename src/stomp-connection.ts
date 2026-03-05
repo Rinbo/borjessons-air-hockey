@@ -5,6 +5,7 @@
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
 import properties from './config/properties';
+import { getToken } from './auth/auth-service';
 
 export type MessageCallback = (message: IMessage) => void;
 
@@ -39,13 +40,21 @@ export class StompConnection {
 
   /**
    * Connect and return a promise that resolves when the connection is established.
+   * Passes the gateway JWT as an Authorization header on the STOMP CONNECT frame.
    */
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       const { wsBaseUrl } = properties();
+      const token = getToken();
+
+      const connectHeaders: Record<string, string> = {};
+      if (token) {
+        connectHeaders['Authorization'] = `Bearer ${token}`;
+      }
 
       this.client = new Client({
         webSocketFactory: () => new SockJS(wsBaseUrl),
+        connectHeaders,
         reconnectDelay: 1000,
         heartbeatIncoming: 2000,
         heartbeatOutgoing: 2000,
