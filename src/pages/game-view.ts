@@ -20,6 +20,11 @@ let rafId: number | null = null;
 let resizeHandler: (() => void) | null = null;
 let containerEl: HTMLElement | null = null;
 
+// Debug overlay (enabled via ?debug=net)
+const DEBUG_NET = new URLSearchParams(window.location.search).has('debug');
+let debugOverlay: HTMLElement | null = null;
+let debugFrameCounter = 0;
+
 function calculateCanvasSize(): { width: number; height: number } {
   const w = Math.min(window.innerWidth, MAX_WIDTH) - MARGIN;
   const h = w / ASPECT_RATIO;
@@ -47,6 +52,18 @@ export function renderGameView(
       <canvas class="game-canvas" id="game-board" width="${width}" height="${height}"></canvas>
     </div>
   `;
+
+  // Create debug overlay if ?debug=net is in the URL
+  if (DEBUG_NET) {
+    debugOverlay = document.createElement('div');
+    debugOverlay.id = 'net-debug-overlay';
+    debugOverlay.style.cssText = `
+      position: fixed; top: 4px; right: 4px; z-index: 9999;
+      background: rgba(0,0,0,0.75); color: #0f0; font: 11px/1.4 monospace;
+      padding: 6px 10px; border-radius: 4px; pointer-events: none;
+    `;
+    document.body.appendChild(debugOverlay);
+  }
 
   const canvas = document.getElementById('game-board') as HTMLCanvasElement;
   const agency = getAgencyExtention(players, username);
@@ -89,6 +106,19 @@ export function renderGameView(
   // rAF render loop
   function render() {
     board!.draw();
+
+    // Update debug overlay every 10 frames (~5Hz) to avoid layout thrash
+    if (DEBUG_NET && debugOverlay && board) {
+      debugFrameCounter++;
+      if (debugFrameCounter % 10 === 0) {
+        const stats = board.getJitterStats();
+        debugOverlay.textContent =
+          `buf: ${stats.bufferDepth} | tick: ${stats.estimatedTickMs}ms` +
+          ` | jitter: ${stats.jitterMs}ms` +
+          (stats.isExtrapolating ? ' | EXTRAP' : '');
+      }
+    }
+
     rafId = requestAnimationFrame(render);
   }
   rafId = requestAnimationFrame(render);
@@ -158,6 +188,12 @@ export function destroyGameView(): void {
   if (resizeHandler) {
     window.removeEventListener('resize', resizeHandler);
     resizeHandler = null;
+  }
+
+  if (debugOverlay) {
+    debugOverlay.remove();
+    debugOverlay = null;
+    debugFrameCounter = 0;
   }
 
   containerEl = null;
