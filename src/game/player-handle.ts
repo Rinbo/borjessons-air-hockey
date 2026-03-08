@@ -2,8 +2,6 @@ import Board, { BroadcastHandle, GameObject, Position } from './board';
 import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
 import { SHADOW_PAD } from './utils';
 
-type ClientEvent = MouseEvent | Touch;
-
 const BROADCAST_INTERVAL_MS = 20; // ~50Hz, aligned with server tick rate
 
 export default class PlayerHandle implements GameObject {
@@ -14,6 +12,9 @@ export default class PlayerHandle implements GameObject {
   private lastBroadcastTime: number;
   private sprite: HTMLCanvasElement | null = null;
   private abortController: AbortController;
+
+  // Cached canvas rect — set once on pointerdown, reused for all pointermove events
+  private cachedRect: DOMRect | null = null;
 
   constructor(board: Board, broadcastHandle: BroadcastHandle) {
     this.board = board;
@@ -32,12 +33,10 @@ export default class PlayerHandle implements GameObject {
     const signal = this.abortController.signal;
     const canvas = this.board.getCanvas();
 
-    canvas.addEventListener('touchstart', event => this.onTouchStart(event), { passive: false, signal });
-    canvas.addEventListener('mousedown', event => this.onStart(event), { signal });
-    canvas.addEventListener('touchmove', event => this.onTouchMove(event), { passive: false, signal });
-    canvas.addEventListener('mousemove', event => this.onMove(event), { signal });
-    canvas.addEventListener('touchend', () => (this.isDragging = false), { signal });
-    canvas.addEventListener('mouseup', () => (this.isDragging = false), { signal });
+    canvas.addEventListener('pointerdown', event => this.onPointerDown(event), { signal });
+    canvas.addEventListener('pointermove', event => this.onPointerMove(event), { signal });
+    canvas.addEventListener('pointerup', event => this.onPointerUp(event), { signal });
+    canvas.addEventListener('pointercancel', event => this.onPointerUp(event), { signal });
   }
 
   public update(position: Position): void {
@@ -56,29 +55,31 @@ export default class PlayerHandle implements GameObject {
     this.abortController.abort();
   }
 
-  private onTouchStart(event: TouchEvent): void {
-    event.preventDefault();
-    this.onStart(event.targetTouches[0]);
-  }
-
-  private onStart(event: ClientEvent): void {
+  private onPointerDown(event: PointerEvent): void {
+    // Cache the bounding rect once per drag to avoid layout thrashing on every move
+    this.cachedRect = this.board.getCanvas().getBoundingClientRect();
     const { x, y } = this.getCanvasOffset(event);
 
     if (this.isWithinBoundsOfHandle(x, y)) {
       this.isDragging = true;
+      // Capture the pointer so events keep firing even if the finger leaves the canvas
+      this.board.getCanvas().setPointerCapture(event.pointerId);
     }
   }
 
-  private onTouchMove(event: TouchEvent): void {
-    event.preventDefault();
-    this.onMove(event.targetTouches[0]);
-  }
-
-  private onMove(event: ClientEvent): void {
+  private onPointerMove(event: PointerEvent): void {
     if (this.isDragging) {
       this.position = this.normalizePosition(this.getCanvasOffset(event));
       // No drawHandle() here — the rAF loop handles drawing
       this.broadcastPosition();
+    }
+  }
+
+  private onPointerUp(event: PointerEvent): void {
+    if (this.isDragging) {
+      this.isDragging = false;
+      this.board.getCanvas().releasePointerCapture(event.pointerId);
+      this.cachedRect = null;
     }
   }
 
@@ -114,10 +115,9 @@ export default class PlayerHandle implements GameObject {
     }
   }
 
-  private getCanvasOffset(event: ClientEvent): Position {
-    const { left, top } = this.board.getCanvas().getBoundingClientRect();
-
-    return { x: event.clientX - left, y: event.clientY - top };
+  private getCanvasOffset(event: PointerEvent): Position {
+    const rect = this.cachedRect ?? this.board.getCanvas().getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
   /**
