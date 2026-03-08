@@ -15,6 +15,9 @@ import { addRoute, startRouter } from './router';
 // Auth
 import { tryRefresh } from './auth/auth-service';
 
+// Dev Gate
+import { showDevGate } from './dev-gate';
+
 // Pages
 import * as landing from './pages/landing';
 import * as login from './pages/login';
@@ -36,10 +39,19 @@ addRoute('/games/online', onlineUsers.mount, onlineUsers.unmount);
 addRoute('/games/:id', gameContainer.mount, gameContainer.unmount);
 addRoute('/error', error.mount, error.unmount);
 
-// Attempt silent refresh before starting router
-const root = document.getElementById('root');
-if (root) {
-  tryRefresh().finally(() => {
-    startRouter(root);
-  });
+// Boot the app — dev gate in production only
+async function boot() {
+  if (import.meta.env.PROD) {
+    await showDevGate();
+  }
+
+  const root = document.getElementById('root');
+  if (root) {
+    tryRefresh().finally(() => {
+      startRouter(root);
+    });
+  }
 }
+
+boot();
+
