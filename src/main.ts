@@ -27,9 +27,6 @@ import * as gameContainer from './pages/game-container';
 import * as onlineUsers from './pages/online-users';
 import * as error from './pages/error';
 
-// SameSite cookie
-document.cookie = `SameSite=None;Secure`;
-
 // Register routes
 addRoute('/', landing.mount, landing.unmount);
 addRoute('/login', login.mount, login.unmount);
