@@ -1,12 +1,21 @@
 import { GOAL_ANGLE, GOAL_HEIGHT, GOAL_WIDTH, HANDLE_RADIUS, OPPONENT_HANDLE_START_POS, PLAYER_HANDLE_START_POS, PUCK_RADIUS } from './constants';
+import JitterBuffer from './jitter-buffer';
 import OpponentHandle from './opponent-handle';
 import PlayerHandle from './player-handle';
 import Puck from './puck';
+import PuckPredictor from './puck-predictor';
 import { createPlayerHandleSprite, createOpponentHandleSprite, createPuckSprite } from './utils';
 
 type Size = { width: number; height: number };
 
-export type BroadcastState = { opponent: Position; puck: Position; remainingSeconds: number; collisionEvent: number };
+export type BroadcastState = {
+  opponent: Position;
+  puck: Position;
+  puckSpeedX: number;
+  puckSpeedY: number;
+  remainingSeconds: number;
+  collisionEvent: number;
+};
 export type Position = { x: number; y: number };
 export type Radius = Position;
 
@@ -25,12 +34,9 @@ export default class Board {
   private puck: Puck;
   private size: Size = { width: 350, height: 560 };
 
-  // Interpolation state
-  private prevState: BroadcastState | null = null;
-  private currState: BroadcastState | null = null;
-  private lastUpdateTime: number = 0;
-  private serverTickMs: number = 20; // 50 FPS server tick = 20ms
-
+  // Prediction / buffering
+  private puckPredictor: PuckPredictor;
+  private opponentBuffer: JitterBuffer;
   // Cached background
   private bgCanvas: HTMLCanvasElement | null = null;
 
@@ -41,6 +47,8 @@ export default class Board {
     this.playerHandle = new PlayerHandle(this, broadcastHandle);
     this.puck = new Puck(this);
     this.size = size;
+    this.puckPredictor = new PuckPredictor();
+    this.opponentBuffer = new JitterBuffer();
     this.regenerateSprites();
     this.regenerateBackground();
   }
@@ -58,13 +66,15 @@ export default class Board {
       this.ctx.clearRect(0, 0, width, height);
     }
 
-    // Apply interpolation before drawing
-    if (this.prevState && this.currState) {
-      const elapsed = performance.now() - this.lastUpdateTime;
-      const alpha = Math.min(elapsed / this.serverTickMs, 1);
+    // Update positions from predictor / buffer before drawing
+    const now = performance.now();
 
-      this.opponentHandle.update(this.lerp(this.prevState.opponent, this.currState.opponent, alpha));
-      this.puck.update(this.lerp(this.prevState.puck, this.currState.puck, alpha));
+    const puckPos = this.puckPredictor.predict(now);
+    this.puck.update(puckPos);
+
+    const opponentPos = this.opponentBuffer.sample(now);
+    if (opponentPos) {
+      this.opponentHandle.update(opponentPos);
     }
 
     this.playerHandle.draw();
@@ -84,15 +94,19 @@ export default class Board {
    * Called when a new server state arrives. Shifts current → previous for interpolation.
    */
   public update(broadcastState: BroadcastState): void {
-    this.prevState = this.currState;
-    this.currState = broadcastState;
-    this.lastUpdateTime = performance.now();
+    const now = performance.now();
 
-    // If no previous state yet, snap directly
-    if (!this.prevState) {
-      this.opponentHandle.update(broadcastState.opponent);
-      this.puck.update(broadcastState.puck);
-    }
+    // Determine if we should snap (collision event) vs. smooth-correct
+    const snap = broadcastState.collisionEvent !== 0;
+
+    this.puckPredictor.onServerUpdate(
+      broadcastState.puck,
+      broadcastState.puckSpeedX,
+      broadcastState.puckSpeedY,
+      snap
+    );
+
+    this.opponentBuffer.push(broadcastState.opponent, now);
   }
 
   public setSize(size: Size): void {
@@ -350,10 +364,4 @@ export default class Board {
     ctx.closePath();
   }
 
-  private lerp(from: Position, to: Position, alpha: number): Position {
-    return {
-      x: from.x + (to.x - from.x) * alpha,
-      y: from.y + (to.y - from.y) * alpha
-    };
-  }
 }
