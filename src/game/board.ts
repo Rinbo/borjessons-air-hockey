@@ -1,6 +1,4 @@
 import { GOAL_ANGLE, GOAL_HEIGHT, GOAL_WIDTH, HANDLE_RADIUS, OPPONENT_HANDLE_START_POS, PLAYER_HANDLE_START_POS, PUCK_RADIUS } from './constants';
-import InterpolationBuffer from './interpolation-buffer';
-import type { JitterStats } from './interpolation-buffer';
 import OpponentHandle from './opponent-handle';
 import PlayerHandle from './player-handle';
 import Puck from './puck';
@@ -27,8 +25,11 @@ export default class Board {
   private puck: Puck;
   private size: Size = { width: 350, height: 560 };
 
-  // Jitter-absorbing interpolation buffer
-  private interpolationBuffer = new InterpolationBuffer();
+  // Interpolation state
+  private prevState: BroadcastState | null = null;
+  private currState: BroadcastState | null = null;
+  private lastUpdateTime: number = 0;
+  private serverTickMs: number = 20; // 50 FPS server tick = 20ms
 
   // Cached background
   private bgCanvas: HTMLCanvasElement | null = null;
@@ -57,11 +58,13 @@ export default class Board {
       this.ctx.clearRect(0, 0, width, height);
     }
 
-    // Sample the jitter buffer for smooth interpolated positions
-    const sampled = this.interpolationBuffer.sample(performance.now());
-    if (sampled) {
-      this.opponentHandle.update(sampled.opponent);
-      this.puck.update(sampled.puck);
+    // Apply interpolation before drawing
+    if (this.prevState && this.currState) {
+      const elapsed = performance.now() - this.lastUpdateTime;
+      const alpha = Math.min(elapsed / this.serverTickMs, 1);
+
+      this.opponentHandle.update(this.lerp(this.prevState.opponent, this.currState.opponent, alpha));
+      this.puck.update(this.lerp(this.prevState.puck, this.currState.puck, alpha));
     }
 
     this.playerHandle.draw();
@@ -78,17 +81,18 @@ export default class Board {
   }
 
   /**
-   * Called when a new server state arrives. Pushes into the jitter buffer.
+   * Called when a new server state arrives. Shifts current → previous for interpolation.
    */
   public update(broadcastState: BroadcastState): void {
-    this.interpolationBuffer.push(broadcastState);
-  }
+    this.prevState = this.currState;
+    this.currState = broadcastState;
+    this.lastUpdateTime = performance.now();
 
-  /**
-   * Returns jitter buffer diagnostics for the debug overlay.
-   */
-  public getJitterStats(): JitterStats {
-    return this.interpolationBuffer.getJitterStats();
+    // If no previous state yet, snap directly
+    if (!this.prevState) {
+      this.opponentHandle.update(broadcastState.opponent);
+      this.puck.update(broadcastState.puck);
+    }
   }
 
   public setSize(size: Size): void {
@@ -346,5 +350,10 @@ export default class Board {
     ctx.closePath();
   }
 
-
+  private lerp(from: Position, to: Position, alpha: number): Position {
+    return {
+      x: from.x + (to.x - from.x) * alpha,
+      y: from.y + (to.y - from.y) * alpha
+    };
+  }
 }
