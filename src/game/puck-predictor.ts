@@ -9,8 +9,11 @@ const FRAME_RATE = 50;
 const FRAME_DURATION_S = 1 / FRAME_RATE;
 const WALL_RESTITUTION = 0.85;
 
-/** How quickly to blend toward the server-authoritative position (0 = instant snap, higher = smoother). */
-const CORRECTION_RATE = 0.15;
+/** Correction halflife in ms — correction error halves every this many ms. */
+const CORRECTION_HALFLIFE_MS = 30;
+
+/** Below this threshold, corrections snap to zero to avoid sub-pixel wobble. */
+const SNAP_THRESHOLD = 0.002;
 
 /**
  * Client-side puck prediction engine.
@@ -113,13 +116,15 @@ export default class PuckPredictor {
     x += vx * frac;
     y += vy * frac;
 
-    // Decay the correction offset exponentially
-    this.correctionX *= (1 - CORRECTION_RATE);
-    this.correctionY *= (1 - CORRECTION_RATE);
+    // Time-based correction decay (consistent across all frame rates)
+    // CORRECTION_HALFLIFE_MS = 30 means correction halves every 30ms
+    const decayFactor = Math.pow(0.5, dtMs / CORRECTION_HALFLIFE_MS);
+    this.correctionX *= decayFactor;
+    this.correctionY *= decayFactor;
 
-    // Kill tiny corrections to avoid jitter
-    if (Math.abs(this.correctionX) < 0.0001) this.correctionX = 0;
-    if (Math.abs(this.correctionY) < 0.0001) this.correctionY = 0;
+    // Snap tiny corrections to zero — avoids sub-pixel wobble
+    if (Math.abs(this.correctionX) < SNAP_THRESHOLD) this.correctionX = 0;
+    if (Math.abs(this.correctionY) < SNAP_THRESHOLD) this.correctionY = 0;
 
     this.predictedX = x + this.correctionX;
     this.predictedY = y + this.correctionY;
