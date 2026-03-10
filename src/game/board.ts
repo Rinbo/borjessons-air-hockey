@@ -70,7 +70,7 @@ export default class Board {
     // Sample interpolated positions from snapshot buffers
     const now = performance.now();
 
-    const puckPos = this.puckBuffer.sample(now);
+    const puckPos = this.puckBuffer.sample(now, PUCK_RADIUS);
     if (puckPos) this.puck.update(puckPos);
 
     const opponentPos = this.opponentBuffer.sample(now);
@@ -108,7 +108,7 @@ export default class Board {
     if (px < -0.5 || px > 1.5 || py < -0.5 || py > 1.5) {
       this.puckBuffer.clear();
     } else {
-      this.puckBuffer.push(px, py, now);
+      this.puckBuffer.push(px, py, now, broadcastState.puckSpeedX, broadcastState.puckSpeedY);
     }
 
     this.opponentBuffer.push(broadcastState.opponent.x, broadcastState.opponent.y, now);
