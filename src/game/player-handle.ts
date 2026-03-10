@@ -60,19 +60,27 @@ export default class PlayerHandle implements GameObject {
     this.cachedRect = this.board.getCanvas().getBoundingClientRect();
     const { x, y } = this.getCanvasOffset(event);
 
-    if (this.isWithinBoundsOfHandle(x, y)) {
+    // Expand hit-target for coarse pointers (touch) so fat fingers don't miss
+    const hitScale = event.pointerType === 'touch' ? 1.5 : 1.0;
+    if (this.isWithinBoundsOfHandle(x, y, hitScale)) {
       this.isDragging = true;
+      event.preventDefault();
       // Capture the pointer so events keep firing even if the finger leaves the canvas
       this.board.getCanvas().setPointerCapture(event.pointerId);
     }
   }
 
   private onPointerMove(event: PointerEvent): void {
-    if (this.isDragging) {
-      this.position = this.normalizePosition(this.getCanvasOffset(event));
-      // No drawHandle() here — the rAF loop handles drawing
-      this.broadcastPosition();
+    if (!this.isDragging) return;
+    event.preventDefault();
+
+    // Process coalesced events for full touch-sensor resolution (~120-240 Hz)
+    // instead of the default display-rate (~60 Hz) pointermove delivery.
+    const events = event.getCoalescedEvents?.() ?? [event];
+    for (const e of events) {
+      this.position = this.normalizePosition(this.getCanvasOffset(e));
     }
+    this.broadcastPosition();
   }
 
   private onPointerUp(event: PointerEvent): void {
@@ -91,9 +99,9 @@ export default class PlayerHandle implements GameObject {
     }
   }
 
-  private isWithinBoundsOfHandle(x: number, y: number): boolean {
+  private isWithinBoundsOfHandle(x: number, y: number, hitScale: number = 1.0): boolean {
     const { width, height } = this.board.getSize();
-    return Math.sqrt((x - this.position.x * width) ** 2 + (y - this.position.y * height) ** 2) <= HANDLE_RADIUS.x * width;
+    return Math.sqrt((x - this.position.x * width) ** 2 + (y - this.position.y * height) ** 2) <= HANDLE_RADIUS.x * width * hitScale;
   }
 
   private drawHandle(): void {
