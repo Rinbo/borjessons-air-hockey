@@ -4,13 +4,13 @@ import { PUCK_RADIUS, GOAL_WIDTH } from './constants';
 /**
  * Physics constants — must match the server (GameConstants.java).
  */
-const FRICTION_DAMPING = 0.997;
-const FRAME_RATE = 50;
+const FRICTION_DAMPING = 0.9975;
+const FRAME_RATE = 60;
 const FRAME_DURATION_S = 1 / FRAME_RATE;
 const WALL_RESTITUTION = 0.85;
 
 /** Correction halflife in ms — correction error halves every this many ms. */
-const CORRECTION_HALFLIFE_MS = 30;
+const CORRECTION_HALFLIFE_MS = 20;
 
 /** Below this threshold, corrections snap to zero to avoid sub-pixel wobble. */
 const SNAP_THRESHOLD = 0.002;
@@ -34,6 +34,9 @@ export default class PuckPredictor {
   // Current predicted (rendered) position — smoothly converges to truth
   private predictedX = 0.5;
   private predictedY = 0.5;
+
+  // Reusable position object to avoid per-frame allocation
+  private readonly resultPos: Position = { x: 0.5, y: 0.5 };
 
   // Correction offset (difference between prediction and server at moment of update)
   private correctionX = 0;
@@ -83,7 +86,9 @@ export default class PuckPredictor {
     if (PuckPredictor.isOffBoard(this.serverX, this.serverY)) {
       this.predictedX = this.serverX;
       this.predictedY = this.serverY;
-      return { x: this.serverX, y: this.serverY };
+      this.resultPos.x = this.serverX;
+      this.resultPos.y = this.serverY;
+      return this.resultPos;
     }
 
     const dtMs = now - this.lastServerTime;
@@ -129,7 +134,9 @@ export default class PuckPredictor {
     this.predictedX = x + this.correctionX;
     this.predictedY = y + this.correctionY;
 
-    return { x: this.predictedX, y: this.predictedY };
+    this.resultPos.x = this.predictedX;
+    this.resultPos.y = this.predictedY;
+    return this.resultPos;
   }
 
   /**

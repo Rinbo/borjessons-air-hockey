@@ -2,7 +2,7 @@ import Board, { BroadcastHandle, GameObject, Position } from './board';
 import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
 import { SHADOW_PAD } from './utils';
 
-const BROADCAST_INTERVAL_MS = 20; // ~50Hz, aligned with server tick rate
+const BROADCAST_INTERVAL_MS = 16; // ~60Hz, aligned with server tick rate
 
 export default class PlayerHandle implements GameObject {
   private board: Board;

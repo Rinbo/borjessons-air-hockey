@@ -6,7 +6,7 @@ interface Snapshot {
 }
 
 /** Render delay in ms — we render this far behind real-time to absorb jitter. */
-const BUFFER_DELAY_MS = 40; // 2 server ticks at 50 FPS
+const BUFFER_DELAY_MS = 25; // ~1.5 server ticks at 60 FPS
 
 /** Maximum snapshots to retain. */
 const MAX_SNAPSHOTS = 6;
@@ -16,12 +16,15 @@ const MAX_SNAPSHOTS = 6;
  *
  * Instead of rendering the latest server position immediately (which causes
  * stuttering on network jitter), we delay rendering by BUFFER_DELAY_MS and
- * smoothly interpolate between buffered snapshots. This adds ~40ms of visual
+ * smoothly interpolate between buffered snapshots. This adds ~25ms of visual
  * latency for the opponent's handle — imperceptible in practice — but
  * eliminates all stutter and teleportation.
  */
 export default class JitterBuffer {
   private snapshots: Snapshot[] = [];
+
+  // Reusable position object to avoid per-frame allocation
+  private readonly resultPos: Position = { x: 0, y: 0 };
 
   /**
    * Push a new server snapshot into the buffer.
@@ -74,10 +77,9 @@ export default class JitterBuffer {
         if (dt <= 0) return b.position;
 
         const alpha = (renderTime - a.timestamp) / dt;
-        return {
-          x: a.position.x + (b.position.x - a.position.x) * alpha,
-          y: a.position.y + (b.position.y - a.position.y) * alpha,
-        };
+        this.resultPos.x = a.position.x + (b.position.x - a.position.x) * alpha;
+        this.resultPos.y = a.position.y + (b.position.y - a.position.y) * alpha;
+        return this.resultPos;
       }
     }
 
