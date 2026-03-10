@@ -16,5 +16,8 @@ export const GOAL_WIDTH = 0.18;
 export const GOAL_HEIGHT = 0.015;
 export const GOAL_ANGLE = 0.03;
 
+/** Touch */
+export const TOUCH_OFFSET_Y = 0.06; // Shift handle above finger so it's visible under thumb
+
 /** Game */
 export const GAME_DURATION = 120;

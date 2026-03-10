@@ -1,5 +1,5 @@
 import Board, { BroadcastHandle, GameObject, Position } from './board';
-import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS } from './constants';
+import { HANDLE_RADIUS, PLAYER_HANDLE_START_POS, TOUCH_OFFSET_Y } from './constants';
 import { SHADOW_PAD } from './utils';
 
 const BROADCAST_INTERVAL_MS = 16; // ~60Hz, aligned with server tick rate
@@ -12,6 +12,7 @@ export default class PlayerHandle implements GameObject {
   private lastBroadcastTime: number;
   private sprite: HTMLCanvasElement | null = null;
   private abortController: AbortController;
+  private isTouch: boolean = false;
 
   // Cached canvas rect — set once on pointerdown, reused for all pointermove events
   private cachedRect: DOMRect | null = null;
@@ -61,7 +62,8 @@ export default class PlayerHandle implements GameObject {
     const { x, y } = this.getCanvasOffset(event);
 
     // Expand hit-target for coarse pointers (touch) so fat fingers don't miss
-    const hitScale = event.pointerType === 'touch' ? 1.5 : 1.0;
+    this.isTouch = event.pointerType === 'touch';
+    const hitScale = this.isTouch ? 1.5 : 1.0;
     if (this.isWithinBoundsOfHandle(x, y, hitScale)) {
       this.isDragging = true;
       event.preventDefault();
@@ -80,6 +82,14 @@ export default class PlayerHandle implements GameObject {
     for (const e of events) {
       this.position = this.normalizePosition(this.getCanvasOffset(e));
     }
+
+    // Use browser-predicted position when available (Chrome Android ~120-240 Hz touch
+    // digitizer predictions). Gives a subtle head-start so the handle feels less laggy.
+    const predicted = event.getPredictedEvents?.() ?? [];
+    if (predicted.length > 0) {
+      this.position = this.normalizePosition(this.getCanvasOffset(predicted[predicted.length - 1]));
+    }
+
     this.broadcastPosition();
   }
 
@@ -136,7 +146,12 @@ export default class PlayerHandle implements GameObject {
     const { width, height } = this.board.getSize();
 
     const xRel = Math.max(HANDLE_RADIUS.x, postion.x / width);
-    const yRel = Math.max(0.5 + HANDLE_RADIUS.y, postion.y / height);
+    let yRel = Math.max(0.5 + HANDLE_RADIUS.y, postion.y / height);
+
+    // On touch, shift the handle above the finger so it's visible under the thumb
+    if (this.isTouch) {
+      yRel = Math.max(0.5 + HANDLE_RADIUS.y, yRel - TOUCH_OFFSET_Y);
+    }
 
     return { x: Math.min(1 - HANDLE_RADIUS.x, xRel), y: Math.min(1 - HANDLE_RADIUS.y, yRel) };
   }

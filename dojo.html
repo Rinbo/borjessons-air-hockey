@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, shrink-to-fit=no"
+  />
+  <title>🥋 Air Hockey Dojo — Touch Lab</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 8px 0 4px;
+      color: #26C6DA;
+      text-align: center;
+      letter-spacing: 0.03em;
+    }
+
+    #game-board {
+      display: block;
+      border: 2px solid rgba(38, 198, 218, 0.3);
+      border-radius: 6px;
+      touch-action: none;
+    }
+
+    /* ── Technique toggles ──────────────────────────── */
+    .techniques {
+      width: 100%;
+      max-width: 500px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .tech-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .tech-row.active {
+      border-color: rgba(38, 198, 218, 0.3);
+      background: rgba(38, 198, 218, 0.06);
+    }
+    .tech-row input[type="checkbox"] {
+      accent-color: #26C6DA;
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .tech-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #ccc;
+      min-width: 0;
+    }
+    .tech-desc {
+      font-size: 0.65rem;
+      color: #777;
+      margin-left: auto;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .tech-badge {
+      font-size: 0.6rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .badge-on { background: rgba(38, 198, 218, 0.2); color: #26C6DA; }
+    .badge-off { background: rgba(255,255,255,0.06); color: #666; }
+    .badge-reload { background: rgba(255, 145, 0, 0.2); color: #FF9100; }
+
+    /* ── Misc controls ───────────────────────────────── */
+    .controls {
+      display: flex;
+      gap: 12px;
+      padding: 4px 0;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .controls label {
+      font-size: 0.72rem;
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .controls input[type="checkbox"] { accent-color: #26C6DA; }
+    .controls button {
+      font-size: 0.7rem;
+      background: rgba(38, 198, 218, 0.15);
+      color: #26C6DA;
+      border: 1px solid rgba(38, 198, 218, 0.3);
+      border-radius: 4px;
+      padding: 3px 8px;
+      cursor: pointer;
+    }
+
+    /* ── Diagnostics panel ───────────────────────────── */
+    #diagnostics {
+      width: 100%;
+      max-width: 500px;
+      padding: 6px 10px;
+      font-size: 0.68rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      line-height: 1.45;
+      color: #aaa;
+      background: rgba(0,0,0,0.35);
+      border-radius: 6px;
+      margin-top: 6px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px 14px;
+    }
+    #diagnostics .label { color: #777; }
+    #diagnostics .value { color: #26C6DA; text-align: right; }
+    #diagnostics .warn  { color: #FF9100; text-align: right; }
+  </style>
+</head>
+<body>
+  <h1>🥋 Air Hockey Dojo</h1>
+
+  <!-- Latency reduction techniques — A/B toggles -->
+  <div class="techniques" id="techniques">
+    <div class="tech-row" id="row-predicted">
+      <input type="checkbox" id="t-predicted" />
+      <span class="tech-label">getPredictedEvents()</span>
+      <span class="tech-desc">Browser-predicted positions</span>
+      <span class="tech-badge badge-off" id="badge-predicted">OFF</span>
+    </div>
+    <div class="tech-row" id="row-extrap">
+      <input type="checkbox" id="t-extrap" />
+      <span class="tech-label">Velocity extrapolation</span>
+      <span class="tech-desc">Predict at draw-time</span>
+      <span class="tech-badge badge-off" id="badge-extrap">OFF</span>
+    </div>
+    <div class="tech-row" id="row-desync">
+      <input type="checkbox" id="t-desync" />
+      <span class="tech-label">desynchronized canvas</span>
+      <span class="tech-desc">Bypass compositor (reload)</span>
+      <span class="tech-badge badge-off" id="badge-desync">OFF</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label><input type="checkbox" id="trail-toggle" /> Trail</label>
+    <button id="reset-btn">Reset</button>
+  </div>
+
+  <canvas id="game-board"></canvas>
+
+  <div id="diagnostics">
+    <span class="label">Pointer type</span><span class="value" id="d-pointer-type">—</span>
+    <span class="label">Coalesced</span><span class="value" id="d-coalesced">—</span>
+    <span class="label">Predicted</span><span class="value" id="d-predicted">—</span>
+    <span class="label">Position (norm)</span><span class="value" id="d-pos">—</span>
+    <span class="label">Extrap offset (px)</span><span class="value" id="d-extrap-offset">—</span>
+    <span class="label">Velocity (norm/ms)</span><span class="value" id="d-velocity">—</span>
+    <span class="label">Frame Δ</span><span class="value" id="d-frame-dt">—</span>
+    <span class="label">Move→Draw gap</span><span class="value" id="d-lag">—</span>
+    <span class="label">Moves / frame</span><span class="value" id="d-moves-frame">—</span>
+    <span class="label">desynchronized</span><span class="value" id="d-desync">—</span>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // Constants — identical to the real game
+    // ═══════════════════════════════════════════════════════════════
+    const ASPECT_RATIO = 0.625;
+    const MAX_WIDTH = 500;
+    const HANDLE_RADIUS_X = 0.09;
+    const HANDLE_RADIUS_Y = HANDLE_RADIUS_X * ASPECT_RATIO;
+    const PLAYER_HANDLE_START_POS = { x: 0.5, y: 0.8 };
+    const GOAL_WIDTH  = 0.18;
+    const GOAL_HEIGHT = 0.015;
+    const GOAL_ANGLE  = 0.03;
+    const SHADOW_PAD  = 0.35;
+    const SHADOW_DX   = 0.08;
+    const SHADOW_DY   = 0.15;
+
+    // ═══════════════════════════════════════════════════════════════
+    // URL params for desynchronized (needs reload to change)
+    // ═══════════════════════════════════════════════════════════════
+    const params = new URLSearchParams(window.location.search);
+    const useDesync = params.get('desync') === '1';
+
+    // ═══════════════════════════════════════════════════════════════
+    // Technique toggles state
+    // ═══════════════════════════════════════════════════════════════
+    let usePredicted = false;
+    let useExtrap = false;
+
+    // ═══════════════════════════════════════════════════════════════
+    // State
+    // ═══════════════════════════════════════════════════════════════
+    let position = { ...PLAYER_HANDLE_START_POS };
+    let isDragging = false;
+    let cachedRect = null;
+    let sprite = null;
+    let bgCanvas = null;
+
+    // Trail
+    let showTrail = false;
+    const trail = [];
+    const TRAIL_MAX = 120;
+    const TRAIL_LIFETIME = 800;
+
+    // Velocity tracking (for extrapolation)
+    let velocityX = 0;  // normalized units per ms
+    let velocityY = 0;
+    let lastMovePosition = { ...PLAYER_HANDLE_START_POS };
+    let lastMoveTimestamp = 0;
+    // Smoothed velocity (exponential moving average)
+    const VELOCITY_SMOOTH = 0.4; // 0 = no smoothing, 1 = full smoothing
+
+    // Diagnostics
+    let lastPointerType = '—';
+    let lastCoalesced = 0;
+    let lastPredicted = 0;
+    let moveCountThisFrame = 0;
+    let moveCountDisplay = 0;
+    let lastFrameTime = performance.now();
+    let lastExtrapOffset = 0;
+
+    // ═══════════════════════════════════════════════════════════════
+    // Canvas setup — with optional desynchronized hint
+    // ═══════════════════════════════════════════════════════════════
+    const canvas = document.getElementById('game-board');
+    const ctxOptions = { desynchronized: useDesync };
+    const ctx = canvas.getContext('2d', ctxOptions);
+
+    // Check if desynchronized was actually granted
+    const isDesyncActive = ctx.getContextAttributes?.().desynchronized ?? false;
+    updateDiag('d-desync', isDesyncActive ? 'YES ✓' : (useDesync ? 'requested (denied)' : 'off'));
+
+    const BANNER_HEIGHTS = 220;
+    const MARGIN = 10;
+
+    function calcSize() {
+      const w = Math.min(window.innerWidth - MARGIN, MAX_WIDTH);
+      const h = w / ASPECT_RATIO;
+      if (h + BANNER_HEIGHTS >= window.innerHeight) {
+        const maxH = window.innerHeight - BANNER_HEIGHTS - MARGIN;
+        return { width: Math.max(100, maxH * ASPECT_RATIO), height: Math.max(160, maxH) };
+      }
+      return { width: w, height: h };
+    }
+
+    let size = calcSize();
+
+    function resize() {
+      size = calcSize();
+      canvas.width = size.width;
+      canvas.height = size.height;
+      canvas.style.width = size.width + 'px';
+      canvas.style.height = size.height + 'px';
+      regenerateBackground();
+      regenerateSprite();
+      position = { ...PLAYER_HANDLE_START_POS };
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ═══════════════════════════════════════════════════════════════
+    // Background rendering — identical to Board.regenerateBackground
+    // ═══════════════════════════════════════════════════════════════
+    function regenerateBackground() {
+      const { width, height } = size;
+      if (width <= 0 || height <= 0) return;
+
+      const bg = document.createElement('canvas');
+      bg.width = width; bg.height = height;
+      const c = bg.getContext('2d');
+
+      // Ice surface
+      const iceGrad = c.createLinearGradient(0, 0, 0, height);
+      iceGrad.addColorStop(0, '#e4ecf4'); iceGrad.addColorStop(0.25, '#edf2f8');
+      iceGrad.addColorStop(0.5, '#f2f6fb'); iceGrad.addColorStop(0.75, '#edf2f8');
+      iceGrad.addColorStop(1, '#e4ecf4');
+      c.fillStyle = iceGrad; c.fillRect(0, 0, width, height);
+
+      // Ice scratches
+      c.save(); c.globalAlpha = 0.04; c.strokeStyle = '#b8c4d0'; c.lineWidth = 0.5;
+      const scratchCount = Math.floor(width * height / 600);
+      for (let i = 0; i < scratchCount; i++) {
+        const sx = Math.random() * width, sy = Math.random() * height;
+        const angle = Math.random() * Math.PI, len = Math.random() * 15 + 5;
+        c.beginPath(); c.moveTo(sx, sy);
+        c.lineTo(sx + Math.cos(angle) * len, sy + Math.sin(angle) * len); c.stroke();
+      }
+      c.restore();
+
+      // Goal creases
+      const cr = width * 0.18;
+      c.save(); c.beginPath(); c.arc(width/2, 0, cr, 0, Math.PI);
+      c.fillStyle = 'rgba(200,60,60,0.06)'; c.fill();
+      c.strokeStyle = 'rgba(180,50,50,0.18)'; c.lineWidth = 1.5; c.stroke(); c.restore();
+      c.save(); c.beginPath(); c.arc(width/2, height, cr, Math.PI, Math.PI*2);
+      c.fillStyle = 'rgba(200,60,60,0.06)'; c.fill();
+      c.strokeStyle = 'rgba(180,50,50,0.18)'; c.lineWidth = 1.5; c.stroke(); c.restore();
+
+      // Center line
+      c.save(); c.setLineDash([10,6]); c.strokeStyle = 'rgba(180,50,50,0.30)'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(4, height/2); c.lineTo(width-4, height/2); c.stroke();
+      c.setLineDash([]); c.restore();
+
+      // Center circle + dot
+      const ccr = Math.min(width, height) * 0.13;
+      c.strokeStyle = 'rgba(40,80,160,0.22)'; c.lineWidth = 2;
+      c.beginPath(); c.arc(width/2, height/2, ccr, 0, 2*Math.PI); c.stroke();
+      c.fillStyle = 'rgba(40,80,160,0.30)';
+      c.beginPath(); c.arc(width/2, height/2, Math.max(3, width*0.008), 0, 2*Math.PI); c.fill();
+
+      // Goals
+      drawGoal(c, width, height, 'top');
+      drawGoal(c, width, height, 'bottom');
+
+      // Vignette
+      c.save();
+      const vg = c.createRadialGradient(width/2,height/2,Math.min(width,height)*0.35, width/2,height/2,Math.max(width,height)*0.7);
+      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.06)');
+      c.fillStyle = vg; c.fillRect(0,0,width,height); c.restore();
+
+      bgCanvas = bg;
+    }
+
+    function drawGoal(c, width, height, pos) {
+      const gw = GOAL_WIDTH*width, gh = GOAL_HEIGHT*height, ga = GOAL_ANGLE*width, cx = width/2;
+      c.save();
+      const isTop = pos === 'top';
+      const baseY = isTop ? 0 : height, depthY = isTop ? gh : height-gh, sign = isTop ? 1 : -1;
+
+      c.fillStyle = 'rgba(0,0,0,0.12)'; c.beginPath();
+      c.moveTo(cx-gw-2,baseY); c.lineTo(cx-gw+ga-2,depthY+sign*4);
+      c.lineTo(cx+gw-ga+2,depthY+sign*4); c.lineTo(cx+gw+2,baseY); c.fill();
+
+      const ng = c.createLinearGradient(0,baseY,0,depthY);
+      ng.addColorStop(0,'rgba(30,30,40,0.35)'); ng.addColorStop(1,'rgba(30,30,40,0.10)');
+      c.fillStyle = ng; c.beginPath();
+      c.moveTo(cx-gw,baseY); c.lineTo(cx-gw+ga,depthY);
+      c.lineTo(cx+gw-ga,depthY); c.lineTo(cx+gw,baseY); c.fill();
+
+      c.save(); c.beginPath();
+      c.moveTo(cx-gw,baseY); c.lineTo(cx-gw+ga,depthY);
+      c.lineTo(cx+gw-ga,depthY); c.lineTo(cx+gw,baseY); c.clip();
+      c.strokeStyle = 'rgba(255,255,255,0.12)'; c.lineWidth = 0.5;
+      for (let i = 1; i <= 4; i++) {
+        const f = i/5, ly = baseY+(depthY-baseY)*f;
+        c.beginPath(); c.moveTo(cx-gw+ga*f,ly); c.lineTo(cx+gw-ga*f,ly); c.stroke();
+      }
+      for (let i = 1; i <= 6; i++) {
+        const f = i/7, lx = (cx-gw+ga)+((cx+gw-ga)-(cx-gw+ga))*f;
+        c.beginPath(); c.moveTo(cx-gw+(cx+gw-(cx-gw))*f,baseY); c.lineTo(lx,depthY); c.stroke();
+      }
+      c.restore();
+
+      c.strokeStyle = 'rgba(140,40,40,0.45)'; c.lineWidth = 2; c.lineJoin = 'round';
+      c.beginPath(); c.moveTo(cx-gw,baseY); c.lineTo(cx-gw+ga,depthY);
+      c.lineTo(cx+gw-ga,depthY); c.lineTo(cx+gw,baseY); c.stroke();
+
+      c.strokeStyle = 'rgba(255,100,100,0.15)'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(cx-gw+1,baseY); c.lineTo(cx-gw+ga+1,depthY+sign*1);
+      c.lineTo(cx+gw-ga-1,depthY+sign*1); c.lineTo(cx+gw-1,baseY); c.stroke();
+      c.restore();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Handle sprite — identical to createPlayerHandleSprite
+    // ═══════════════════════════════════════════════════════════════
+    function regenerateSprite() {
+      const radius = HANDLE_RADIUS_X * size.width;
+      const pal = {
+        rimOuter:'#004D54', rimInner:'#007580',
+        bodyFrom:'#26C6DA', bodyMid:'#00BCD4', bodyTo:'#0097A7', bodyEdge:'#00838F',
+        highlightCenter:'rgba(255,255,255,0.85)',
+      };
+      const pad = radius * SHADOW_PAD;
+      const sz = Math.ceil((radius + pad) * 2);
+      const cx = sz/2, cy = sz/2;
+
+      const c2 = document.createElement('canvas'); c2.width = sz; c2.height = sz;
+      const c = c2.getContext('2d');
+
+      // Shadow
+      c.beginPath(); c.arc(cx+radius*SHADOW_DX, cy+radius*SHADOW_DY, radius*1.02, 0, Math.PI*2);
+      c.fillStyle = 'rgba(0,0,0,0.25)';
+      c.filter = `blur(${Math.max(2,radius*0.12)}px)`; c.fill(); c.filter = 'none';
+
+      // Rim
+      const rw = radius*0.16;
+      c.beginPath(); c.arc(cx,cy,radius,0,Math.PI*2);
+      const rg = c.createRadialGradient(cx,cy,radius-rw,cx,cy,radius);
+      rg.addColorStop(0,pal.rimInner); rg.addColorStop(0.5,pal.rimOuter); rg.addColorStop(1,pal.rimOuter);
+      c.fillStyle = rg; c.fill();
+      c.beginPath(); c.arc(cx,cy,radius,Math.PI*1.15,Math.PI*1.85);
+      c.arc(cx,cy,radius-rw*0.5,Math.PI*1.85,Math.PI*1.15,true);
+      c.closePath(); c.fillStyle = 'rgba(255,255,255,0.12)'; c.fill();
+
+      // Body
+      const br = radius - rw;
+      c.beginPath(); c.arc(cx,cy,br,0,Math.PI*2);
+      const bg = c.createRadialGradient(cx-br*0.25,cy-br*0.3,br*0.1,cx,cy,br);
+      bg.addColorStop(0,pal.bodyFrom); bg.addColorStop(0.35,pal.bodyMid);
+      bg.addColorStop(0.7,pal.bodyTo); bg.addColorStop(1,pal.bodyEdge);
+      c.fillStyle = bg; c.fill();
+
+      // Groove
+      const gr = br*0.55;
+      c.beginPath(); c.arc(cx,cy,gr,0,Math.PI*2);
+      c.strokeStyle = 'rgba(0,0,0,0.12)'; c.lineWidth = Math.max(1,radius*0.03); c.stroke();
+      c.beginPath(); c.arc(cx,cy,gr-Math.max(1,radius*0.03),0,Math.PI*2);
+      c.strokeStyle = 'rgba(255,255,255,0.10)'; c.lineWidth = Math.max(0.5,radius*0.02); c.stroke();
+
+      // Center
+      const ccr = br*0.22;
+      c.beginPath(); c.arc(cx,cy,ccr,0,Math.PI*2);
+      const cg = c.createRadialGradient(cx,cy,0,cx,cy,ccr);
+      cg.addColorStop(0,pal.bodyMid); cg.addColorStop(1,pal.bodyTo);
+      c.fillStyle = cg; c.fill();
+      c.strokeStyle = 'rgba(0,0,0,0.15)'; c.lineWidth = Math.max(0.5,radius*0.02); c.stroke();
+
+      // Specular
+      c.save(); c.beginPath(); c.arc(cx,cy,br,0,Math.PI*2); c.clip();
+      c.translate(cx-br*0.22,cy-br*0.35); c.scale(1,0.55);
+      c.beginPath(); c.arc(0,0,br*0.55,0,Math.PI*2);
+      const hg = c.createRadialGradient(0,0,0,0,0,br*0.55);
+      hg.addColorStop(0,pal.highlightCenter); hg.addColorStop(0.4,'rgba(255,255,255,0.25)');
+      hg.addColorStop(1,'rgba(255,255,255,0)');
+      c.fillStyle = hg; c.fill(); c.restore();
+
+      sprite = c2;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Pointer events — IDENTICAL to PlayerHandle + enhancements
+    // ═══════════════════════════════════════════════════════════════
+    function isWithinBoundsOfHandle(x, y, hitScale) {
+      const { width, height } = size;
+      return Math.sqrt((x - position.x*width)**2 + (y - position.y*height)**2)
+        <= HANDLE_RADIUS_X * width * hitScale;
+    }
+
+    function getCanvasOffset(event) {
+      const rect = cachedRect ?? canvas.getBoundingClientRect();
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    }
+
+    function normalizePosition(pos) {
+      const { width, height } = size;
+      const xRel = Math.max(HANDLE_RADIUS_X, pos.x / width);
+      const yRel = Math.max(0.5 + HANDLE_RADIUS_Y, pos.y / height);
+      return {
+        x: Math.min(1 - HANDLE_RADIUS_X, xRel),
+        y: Math.min(1 - HANDLE_RADIUS_Y, yRel),
+      };
+    }
+
+    function onPointerDown(event) {
+      cachedRect = canvas.getBoundingClientRect();
+      const { x, y } = getCanvasOffset(event);
+
+      const hitScale = event.pointerType === 'touch' ? 1.5 : 1.0;
+      if (isWithinBoundsOfHandle(x, y, hitScale)) {
+        isDragging = true;
+        event.preventDefault();
+        canvas.setPointerCapture(event.pointerId);
+
+        // Reset velocity on new drag
+        velocityX = 0;
+        velocityY = 0;
+        lastMoveTimestamp = performance.now();
+        lastMovePosition = { ...position };
+
+        lastPointerType = event.pointerType;
+        updateDiag('d-pointer-type', event.pointerType);
+      }
+    }
+
+    function onPointerMove(event) {
+      if (!isDragging) return;
+      event.preventDefault();
+
+      const now = performance.now();
+
+      // ── Step 1: Process coalesced events (same as production) ──
+      const coalesced = event.getCoalescedEvents?.() ?? [event];
+      lastCoalesced = coalesced.length;
+
+      for (const e of coalesced) {
+        position = normalizePosition(getCanvasOffset(e));
+      }
+
+      // ── Step 2: Track velocity for extrapolation ──
+      const dt = now - lastMoveTimestamp;
+      if (dt > 0 && dt < 100) { // ignore huge gaps (e.g. tab switch)
+        const rawVx = (position.x - lastMovePosition.x) / dt;
+        const rawVy = (position.y - lastMovePosition.y) / dt;
+        // Exponential moving average for smoother velocity
+        velocityX = velocityX * VELOCITY_SMOOTH + rawVx * (1 - VELOCITY_SMOOTH);
+        velocityY = velocityY * VELOCITY_SMOOTH + rawVy * (1 - VELOCITY_SMOOTH);
+      }
+      lastMovePosition = { ...position };
+      lastMoveTimestamp = now;
+
+      // ── Step 3: Apply predicted events if enabled ──
+      if (usePredicted) {
+        const predicted = event.getPredictedEvents?.() ?? [];
+        lastPredicted = predicted.length;
+        if (predicted.length > 0) {
+          // Use the last predicted position — it's the browser's best guess
+          // for where the pointer will be at the next frame
+          const last = predicted[predicted.length - 1];
+          position = normalizePosition(getCanvasOffset(last));
+        }
+      } else {
+        lastPredicted = 0;
+      }
+
+      // Trail
+      if (showTrail) {
+        trail.push({ x: position.x, y: position.y, t: now });
+        if (trail.length > TRAIL_MAX) trail.shift();
+      }
+
+      moveCountThisFrame++;
+
+      updateDiag('d-coalesced', lastCoalesced);
+      updateDiag('d-predicted', lastPredicted > 0 ? lastPredicted : '—');
+      updateDiag('d-pos', `${position.x.toFixed(3)}, ${position.y.toFixed(3)}`);
+      const speed = Math.sqrt(velocityX**2 + velocityY**2);
+      updateDiag('d-velocity', speed.toFixed(4));
+    }
+
+    function onPointerUp(event) {
+      if (isDragging) {
+        isDragging = false;
+        canvas.releasePointerCapture(event.pointerId);
+        cachedRect = null;
+        velocityX = 0;
+        velocityY = 0;
+      }
+    }
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointercancel', onPointerUp);
+
+    // ═══════════════════════════════════════════════════════════════
+    // Render loop
+    // ═══════════════════════════════════════════════════════════════
+    function draw(now) {
+      const { width, height } = size;
+
+      // Background
+      if (bgCanvas) {
+        ctx.drawImage(bgCanvas, 0, 0);
+      } else {
+        ctx.clearRect(0, 0, width, height);
+      }
+
+      // ── Determine draw position ──
+      let drawPos = { ...position };
+
+      // Apply velocity extrapolation if enabled and dragging
+      if (useExtrap && isDragging && lastMoveTimestamp > 0) {
+        const elapsed = now - lastMoveTimestamp;
+        // Only extrapolate for reasonable time gaps (< 50ms)
+        // Beyond that, the finger probably stopped or changed direction
+        if (elapsed > 0 && elapsed < 50) {
+          const extrapX = position.x + velocityX * elapsed;
+          const extrapY = position.y + velocityY * elapsed;
+
+          // Clamp to valid bounds
+          drawPos.x = Math.min(1 - HANDLE_RADIUS_X, Math.max(HANDLE_RADIUS_X, extrapX));
+          drawPos.y = Math.min(1 - HANDLE_RADIUS_Y, Math.max(0.5 + HANDLE_RADIUS_Y, extrapY));
+
+          // Track how much we extrapolated (for diagnostics)
+          lastExtrapOffset = Math.sqrt(
+            ((drawPos.x - position.x) * width) ** 2 +
+            ((drawPos.y - position.y) * height) ** 2
+          );
+        } else {
+          lastExtrapOffset = 0;
+        }
+      } else {
+        lastExtrapOffset = 0;
+      }
+
+      // Trail
+      if (showTrail && trail.length > 1) {
+        const cutoff = now - TRAIL_LIFETIME;
+        while (trail.length > 0 && trail[0].t < cutoff) trail.shift();
+        ctx.save();
+        for (let i = 0; i < trail.length; i++) {
+          const t = trail[i];
+          const age = (now - t.t) / TRAIL_LIFETIME;
+          const alpha = (1 - age) * 0.5;
+          const r = HANDLE_RADIUS_X * width * (0.15 + (1 - age) * 0.3);
+          ctx.beginPath(); ctx.arc(t.x*width, t.y*height, r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(38,198,218,${alpha})`; ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Player handle at (potentially extrapolated) position
+      const px = drawPos.x * width;
+      const py = drawPos.y * height;
+      const r = HANDLE_RADIUS_X * width;
+      const offset = r * (1 + SHADOW_PAD);
+
+      if (sprite) {
+        ctx.drawImage(sprite, px - offset, py - offset);
+      } else {
+        ctx.beginPath(); ctx.arc(px, py, r, 0, 2*Math.PI);
+        ctx.fillStyle = '#303030'; ctx.fill();
+      }
+
+      // Show extrapolation vector when active
+      if (useExtrap && isDragging && lastExtrapOffset > 1) {
+        ctx.save();
+        // Draw a small line from actual position to extrapolated position
+        const actualPx = position.x * width;
+        const actualPy = position.y * height;
+        ctx.beginPath();
+        ctx.moveTo(actualPx, actualPy);
+        ctx.lineTo(px, py);
+        ctx.strokeStyle = 'rgba(255, 145, 0, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Small dot at actual position
+        ctx.beginPath(); ctx.arc(actualPx, actualPy, 3, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255, 145, 0, 0.7)'; ctx.fill();
+        ctx.restore();
+      }
+
+      // Boundary line
+      ctx.save();
+      ctx.strokeStyle = 'rgba(38,198,218,0.15)'; ctx.lineWidth = 1;
+      ctx.setLineDash([6,6]); ctx.beginPath();
+      ctx.moveTo(0, height*0.5); ctx.lineTo(width, height*0.5); ctx.stroke();
+      ctx.restore();
+
+      // Frame timing diagnostics
+      const frameDt = now - lastFrameTime;
+      lastFrameTime = now;
+      moveCountDisplay = moveCountThisFrame;
+      moveCountThisFrame = 0;
+
+      updateDiag('d-frame-dt', frameDt.toFixed(1) + ' ms');
+      updateDiag('d-moves-frame', String(moveCountDisplay));
+      updateDiag('d-extrap-offset', lastExtrapOffset.toFixed(1));
+
+      if (isDragging && lastMoveTimestamp > 0) {
+        const lag = now - lastMoveTimestamp;
+        updateDiag('d-lag', lag.toFixed(1) + ' ms', lag > 20);
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    requestAnimationFrame(draw);
+
+    // ═══════════════════════════════════════════════════════════════
+    // Diagnostics helpers
+    // ═══════════════════════════════════════════════════════════════
+    function updateDiag(id, value, warn) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = value;
+        el.className = warn ? 'warn' : 'value';
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Technique toggle wiring
+    // ═══════════════════════════════════════════════════════════════
+    function updateBadge(id, rowId, active) {
+      const badge = document.getElementById(id);
+      const row = document.getElementById(rowId);
+      if (active) {
+        badge.textContent = 'ON';
+        badge.className = 'tech-badge badge-on';
+        row.classList.add('active');
+      } else {
+        badge.textContent = 'OFF';
+        badge.className = 'tech-badge badge-off';
+        row.classList.remove('active');
+      }
+    }
+
+    // getPredictedEvents toggle
+    document.getElementById('t-predicted').addEventListener('change', (e) => {
+      usePredicted = e.target.checked;
+      updateBadge('badge-predicted', 'row-predicted', usePredicted);
+    });
+
+    // Velocity extrapolation toggle
+    document.getElementById('t-extrap').addEventListener('change', (e) => {
+      useExtrap = e.target.checked;
+      updateBadge('badge-extrap', 'row-extrap', useExtrap);
+    });
+
+    // Desynchronized canvas toggle — requires reload
+    const desyncCheckbox = document.getElementById('t-desync');
+    desyncCheckbox.checked = useDesync;
+    if (useDesync) {
+      updateBadge('badge-desync', 'row-desync', true);
+      if (isDesyncActive) {
+        document.getElementById('badge-desync').textContent = 'ON ✓';
+      } else {
+        document.getElementById('badge-desync').textContent = 'ON (denied)';
+        document.getElementById('badge-desync').className = 'tech-badge badge-reload';
+      }
+    }
+    desyncCheckbox.addEventListener('change', (e) => {
+      const newUrl = new URL(window.location);
+      if (e.target.checked) {
+        newUrl.searchParams.set('desync', '1');
+      } else {
+        newUrl.searchParams.delete('desync');
+      }
+      window.location.href = newUrl.toString();
+    });
+
+    // Misc controls
+    document.getElementById('trail-toggle').addEventListener('change', (e) => {
+      showTrail = e.target.checked;
+      if (!showTrail) trail.length = 0;
+    });
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      position = { ...PLAYER_HANDLE_START_POS };
+      trail.length = 0;
+      velocityX = 0; velocityY = 0;
+    });
+  </script>
+</body>
+</html>
