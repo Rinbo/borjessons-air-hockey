@@ -78,7 +78,10 @@ export default class Board {
 
     this.playerHandle.draw();
     this.opponentHandle.draw();
-    this.puck.draw();
+
+    // Only draw puck when buffer has a valid position — after a goal the
+    // buffer is cleared so the puck disappears until the server resets it.
+    if (puckPos) this.puck.draw();
   }
 
   public getCanvas(): HTMLCanvasElement {
@@ -95,7 +98,19 @@ export default class Board {
    */
   public update(broadcastState: BroadcastState): void {
     const now = performance.now();
-    this.puckBuffer.push(broadcastState.puck.x, broadcastState.puck.y, now);
+
+    // Skip off-board puck positions (after a goal, server sends (-1,-1) which
+    // mirrors to (2,2) for P2). Clear the buffer so we don't interpolate
+    // towards them. Use a generous threshold — the puck can legitimately be
+    // slightly past 0/1 as it enters the goal.
+    const px = broadcastState.puck.x;
+    const py = broadcastState.puck.y;
+    if (px < -0.5 || px > 1.5 || py < -0.5 || py > 1.5) {
+      this.puckBuffer.clear();
+    } else {
+      this.puckBuffer.push(px, py, now);
+    }
+
     this.opponentBuffer.push(broadcastState.opponent.x, broadcastState.opponent.y, now);
   }
 

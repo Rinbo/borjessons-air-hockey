@@ -52,6 +52,13 @@ export default class SnapshotBuffer {
   }
 
   /**
+   * Clear all buffered snapshots (e.g. when puck goes off-board after a goal).
+   */
+  public clear(): void {
+    this.snapshots.length = 0;
+  }
+
+  /**
    * Sample the interpolated position at the given render time.
    * Returns a position interpolated from BUFFER_DELAY_MS ago.
    */

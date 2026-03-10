@@ -83,13 +83,6 @@ export default class PlayerHandle implements GameObject {
       this.position = this.normalizePosition(this.getCanvasOffset(e));
     }
 
-    // Use browser-predicted position when available (Chrome Android ~120-240 Hz touch
-    // digitizer predictions). Gives a subtle head-start so the handle feels less laggy.
-    const predicted = event.getPredictedEvents?.() ?? [];
-    if (predicted.length > 0) {
-      this.position = this.normalizePosition(this.getCanvasOffset(predicted[predicted.length - 1]));
-    }
-
     this.broadcastPosition();
   }
 
