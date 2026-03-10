@@ -1,9 +1,8 @@
 import { GOAL_ANGLE, GOAL_HEIGHT, GOAL_WIDTH, HANDLE_RADIUS, OPPONENT_HANDLE_START_POS, PLAYER_HANDLE_START_POS, PUCK_RADIUS } from './constants';
-import JitterBuffer from './jitter-buffer';
 import OpponentHandle from './opponent-handle';
 import PlayerHandle from './player-handle';
 import Puck from './puck';
-import PuckPredictor from './puck-predictor';
+import SnapshotBuffer from './snapshot-buffer';
 import { createPlayerHandleSprite, createOpponentHandleSprite, createPuckSprite } from './utils';
 
 type Size = { width: number; height: number };
@@ -34,9 +33,10 @@ export default class Board {
   private puck: Puck;
   private size: Size = { width: 350, height: 560 };
 
-  // Prediction / buffering
-  private puckPredictor: PuckPredictor;
-  private opponentBuffer: JitterBuffer;
+  // Snapshot interpolation buffers (puck + opponent)
+  private puckBuffer: SnapshotBuffer;
+  private opponentBuffer: SnapshotBuffer;
+
   // Cached background
   private bgCanvas: HTMLCanvasElement | null = null;
 
@@ -47,14 +47,15 @@ export default class Board {
     this.playerHandle = new PlayerHandle(this, broadcastHandle);
     this.puck = new Puck(this);
     this.size = size;
-    this.puckPredictor = new PuckPredictor();
-    this.opponentBuffer = new JitterBuffer();
+    this.puckBuffer = new SnapshotBuffer();
+    this.opponentBuffer = new SnapshotBuffer();
     this.regenerateSprites();
     this.regenerateBackground();
   }
 
   /**
-   * Draws the board with interpolated positions between the two most recent server states.
+   * Draws the board with snapshot-interpolated positions for puck and opponent.
+   * Player handle is drawn at its immediate local position (no delay).
    */
   public draw(): void {
     const { width, height } = this.size;
@@ -66,16 +67,14 @@ export default class Board {
       this.ctx.clearRect(0, 0, width, height);
     }
 
-    // Update positions from predictor / buffer before drawing
+    // Sample interpolated positions from snapshot buffers
     const now = performance.now();
 
-    const puckPos = this.puckPredictor.predict(now);
-    this.puck.update(puckPos);
+    const puckPos = this.puckBuffer.sample(now);
+    if (puckPos) this.puck.update(puckPos);
 
     const opponentPos = this.opponentBuffer.sample(now);
-    if (opponentPos) {
-      this.opponentHandle.update(opponentPos);
-    }
+    if (opponentPos) this.opponentHandle.update(opponentPos);
 
     this.playerHandle.draw();
     this.opponentHandle.draw();
@@ -91,22 +90,13 @@ export default class Board {
   }
 
   /**
-   * Called when a new server state arrives. Shifts current → previous for interpolation.
+   * Called when a new server state arrives. Pushes positions into snapshot
+   * buffers for interpolation — no physics simulation, just real positions.
    */
   public update(broadcastState: BroadcastState): void {
     const now = performance.now();
-
-    // Determine if we should snap (collision event) vs. smooth-correct
-    const snap = broadcastState.collisionEvent !== 0;
-
-    this.puckPredictor.onServerUpdate(
-      broadcastState.puck,
-      broadcastState.puckSpeedX,
-      broadcastState.puckSpeedY,
-      snap
-    );
-
-    this.opponentBuffer.push(broadcastState.opponent, now);
+    this.puckBuffer.push(broadcastState.puck.x, broadcastState.puck.y, now);
+    this.opponentBuffer.push(broadcastState.opponent.x, broadcastState.opponent.y, now);
   }
 
   public setSize(size: Size): void {
