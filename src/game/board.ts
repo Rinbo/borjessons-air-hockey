@@ -10,8 +10,6 @@ type Size = { width: number; height: number };
 export type BroadcastState = {
   opponent: Position;
   puck: Position;
-  puckSpeedX: number;
-  puckSpeedY: number;
   remainingSeconds: number;
   collisionEvent: number;
 };
@@ -70,7 +68,7 @@ export default class Board {
     // Sample interpolated positions from snapshot buffers
     const now = performance.now();
 
-    const puckPos = this.puckBuffer.sample(now, PUCK_RADIUS);
+    const puckPos = this.puckBuffer.sample(now);
     if (puckPos) this.puck.update(puckPos);
 
     const opponentPos = this.opponentBuffer.sample(now);
@@ -108,7 +106,7 @@ export default class Board {
     if (px < -0.5 || px > 1.5 || py < -0.5 || py > 1.5) {
       this.puckBuffer.clear();
     } else {
-      this.puckBuffer.push(px, py, now, broadcastState.puckSpeedX, broadcastState.puckSpeedY);
+      this.puckBuffer.push(px, py, now);
     }
 
     this.opponentBuffer.push(broadcastState.opponent.x, broadcastState.opponent.y, now);

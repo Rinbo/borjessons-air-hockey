@@ -4,8 +4,6 @@ interface Snapshot {
   x: number;
   y: number;
   time: number;
-  vx?: number;
-  vy?: number;
 }
 
 /**
@@ -44,8 +42,8 @@ export default class SnapshotBuffer {
   /**
    * Push a new server snapshot into the buffer.
    */
-  public push(x: number, y: number, now: number, vx?: number, vy?: number): void {
-    this.snapshots.push({ x, y, time: now, vx, vy });
+  public push(x: number, y: number, now: number): void {
+    this.snapshots.push({ x, y, time: now });
 
     // Evict old snapshots beyond capacity
     if (this.snapshots.length > MAX_SNAPSHOTS) {
@@ -62,10 +60,10 @@ export default class SnapshotBuffer {
 
   /**
    * Sample the interpolated position at the given render time.
-   * Returns a position interpolated or extrapolated from BUFFER_DELAY_MS ago.
-   * If boundedRadius is provided, extrapolated positions will be clamped.
+   * Returns a position interpolated from BUFFER_DELAY_MS ago.
+   * If no bracketing snapshots are available, holds at the nearest known position.
    */
-  public sample(now: number, boundedRadius?: { x: number; y: number }): Position | null {
+  public sample(now: number): Position | null {
     if (this.snapshots.length === 0) return null;
 
     const renderTime = now - BUFFER_DELAY_MS;
@@ -85,34 +83,10 @@ export default class SnapshotBuffer {
       return this.resultPos;
     }
 
-    // If renderTime is after the latest snapshot, extrapolate if we have velocity
+    // If renderTime is after the latest snapshot, hold at last known position
     if (renderTime >= this.snapshots[len - 1].time) {
-      const latest = this.snapshots[len - 1];
-      
-      if (latest.vx !== undefined && latest.vy !== undefined) {
-        // Cap extrapolation to 100ms to avoid flying off to infinity
-        const timeDeltaMs = Math.min(renderTime - latest.time, 100);
-        // Backend speed is per 16.666ms tick (60Hz)
-        const ticks = timeDeltaMs / (1000 / 60);
-        
-        let ex = latest.x + latest.vx * ticks;
-        let ey = latest.y + latest.vy * ticks;
-        
-        // Clamp to board bounds if radius is provided
-        if (boundedRadius) {
-          ex = Math.max(boundedRadius.x, Math.min(1 - boundedRadius.x, ex));
-          // For Y, we also clamp but slightly more generously for goals
-          ey = Math.max(0, Math.min(1, ey)); 
-        }
-        
-        this.resultPos.x = ex;
-        this.resultPos.y = ey;
-        return this.resultPos;
-      }
-      
-      // Fallback: hold at last known position
-      this.resultPos.x = latest.x;
-      this.resultPos.y = latest.y;
+      this.resultPos.x = this.snapshots[len - 1].x;
+      this.resultPos.y = this.snapshots[len - 1].y;
       return this.resultPos;
     }
 

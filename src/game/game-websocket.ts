@@ -6,9 +6,9 @@ import { getToken } from '../auth/auth-service';
  * Raw WebSocket connection for the high-frequency game board-state channel.
  * Uses binary protocol for minimal overhead:
  *
- * Server → Client (64 bytes):
+ * Server → Client (48 bytes):
  *   [opponentX: Float64, opponentY: Float64, puckX: Float64, puckY: Float64,
- *    puckSpeedX: Float64, puckSpeedY: Float64, remainingSeconds: Float64, collisionEvent: Float64]
+ *    remainingSeconds: Float64, collisionEvent: Float64]
  *
  * Client → Server (16 bytes):
  *   [handleX: Float64, handleY: Float64]
@@ -32,14 +32,12 @@ export default class GameWebSocket {
     this.ws.onmessage = (event: MessageEvent) => {
       if (event.data instanceof ArrayBuffer && this.onStateCallback) {
         const view = new Float64Array(event.data);
-        if (view.length >= 8) {
+        if (view.length >= 6) {
           const state: BroadcastState = {
             opponent: { x: view[0], y: view[1] },
             puck: { x: view[2], y: view[3] },
-            puckSpeedX: view[4],
-            puckSpeedY: view[5],
-            remainingSeconds: view[6],
-            collisionEvent: view[7]
+            remainingSeconds: view[4],
+            collisionEvent: view[5]
           };
           this.onStateCallback(state);
         }
