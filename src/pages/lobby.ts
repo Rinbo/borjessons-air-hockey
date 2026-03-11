@@ -14,7 +14,7 @@ const ROBOT_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" 
 
 export interface LobbyCallbacks {
   sendMessage: (message: string) => void;
-  toggleReady: () => void;
+  setReady: (ready: boolean) => void;
   addAi: () => void;
   onExit: () => void;
 }
@@ -95,7 +95,8 @@ export function renderLobby(
   });
 
   btnReady.addEventListener('click', () => {
-    callbacks.toggleReady();
+    const currentlyReady = isCurrentPlayerReady(players);
+    callbacks.setReady(!currentlyReady);
   });
 
   menuTrigger.addEventListener('click', (e) => {
@@ -146,6 +147,13 @@ export function updatePlayers(players: Player[]): void {
     const isReady = isCurrentPlayerReady(players);
     btnReady.className = `btn ${isReady ? 'btn-primary' : 'btn-outline'}`;
     btnReady.textContent = isReady ? '✓ Ready' : 'Ready';
+  }
+
+  // Hide the "Play vs AI" button when a second player is present
+  const btnAddAi = document.getElementById('btn-add-ai');
+  if (btnAddAi && players.length >= 2) {
+    btnAddAi.classList.add('btn-exit');
+    btnAddAi.addEventListener('animationend', () => btnAddAi.remove(), { once: true });
   }
 }
 

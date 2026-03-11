@@ -140,6 +140,9 @@ function transitionState(newState: GameState): void {
   // Reset lobby UI state when entering LOBBY from any state
   if (newState === GameState.LOBBY) {
     resetLobbyState();
+    // Force local player to not-ready so the button always starts unticked
+    const me = players.find(p => p.username === username);
+    if (me) me.ready = false;
   }
 
   // Sound effects for state transitions
@@ -160,8 +163,8 @@ function renderCurrentState(): void {
         sendMessage: (msg) => {
           stomp?.publish(`/app/game/${gameId}/chat`, JSON.stringify({ username, message: msg }));
         },
-        toggleReady: () => {
-          stomp?.publish(`/app/game/${gameId}/toggle-ready`, '');
+        setReady: (ready) => {
+          stomp?.publish(`/app/game/${gameId}/toggle-ready`, String(ready));
         },
         addAi: () => {
           stomp?.publish(`/app/game/${gameId}/add-ai`, '');
