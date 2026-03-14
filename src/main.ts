@@ -25,6 +25,7 @@ import * as availableGames from './pages/available-games';
 import * as generateRoom from './pages/generate-room';
 import * as gameContainer from './pages/game-container';
 import * as onlineUsers from './pages/online-users';
+import * as serverStarting from './pages/server-starting';
 import * as error from './pages/error';
 
 // Register routes
@@ -32,6 +33,7 @@ addRoute('/', landing.mount, landing.unmount);
 addRoute('/login', login.mount, login.unmount);
 addRoute('/games', availableGames.mount, availableGames.unmount);
 addRoute('/games/new', generateRoom.mount, generateRoom.unmount);
+addRoute('/games/starting/:gameId', serverStarting.mount, serverStarting.unmount);
 addRoute('/games/online', onlineUsers.mount, onlineUsers.unmount);
 addRoute('/games/:id', gameContainer.mount, gameContainer.unmount);
 addRoute('/error', error.mount, error.unmount);

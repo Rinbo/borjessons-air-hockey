@@ -71,3 +71,21 @@ function getRequestOptions<T>(httpMethod: HttpMethod, data?: T): RequestOptions 
     credentials: 'include'
   };
 }
+
+/* ── Gateway API (hits gateway on :8080, not game server on :8081) ── */
+
+export async function gatewayGet<T>(path: string): Promise<T> {
+  const { gatewayUrl } = properties();
+  const requestOptions: RequestOptions = getRequestOptions('GET');
+  const response = await fetch(gatewayUrl + path, requestOptions);
+  if (!response.ok) throw statusError(response.status);
+  return await response.json();
+}
+
+export async function gatewayPost<T>(path: string, body?: unknown): Promise<T> {
+  const { gatewayUrl } = properties();
+  const requestOptions: RequestOptions = getRequestOptions('POST', body);
+  const response = await fetch(gatewayUrl + path, requestOptions);
+  if (!response.ok) throw statusError(response.status);
+  return await response.json();
+}

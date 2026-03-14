@@ -41,10 +41,15 @@ export class StompConnection {
   /**
    * Connect and return a promise that resolves when the connection is established.
    * Passes the gateway JWT as an Authorization header on the STOMP CONNECT frame.
+   *
+   * Uses the server URL from sessionStorage (set by gateway game creation)
+   * or falls back to the VITE_WS_API_URL env var for local development.
    */
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
+      const dynamicUrl = sessionStorage.getItem('game_server_url');
       const { wsBaseUrl } = properties();
+      const serverUrl = dynamicUrl || wsBaseUrl;
       const token = getToken();
 
       const connectHeaders: Record<string, string> = {};
@@ -53,7 +58,7 @@ export class StompConnection {
       }
 
       this.client = new Client({
-        webSocketFactory: () => new SockJS(wsBaseUrl),
+        webSocketFactory: () => new SockJS(serverUrl),
         connectHeaders,
         reconnectDelay: 1000,
         heartbeatIncoming: 2000,
