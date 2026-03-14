@@ -1,18 +1,14 @@
 /* ===================================================
-   Online Users Page
+   Online Users Page — REST-based (no STOMP)
    =================================================== */
 
 import { navigate } from '../router';
-import { get } from '../api/api';
-import { StompConnection } from '../stomp-connection';
-import { pingListener } from '../utils/websocket-utils';
+import { startPresence, stopPresence, getOnlineUsers } from '../services/presence-service';
 import { trimName } from '../utils/misc-utils';
 import { getGameUsername } from '../auth/auth-service';
-import type { StompSubscription } from '@stomp/stompjs';
 
-let stomp: StompConnection | null = null;
-let subscription: StompSubscription | null = null;
 let container: HTMLElement | null = null;
+let pollInterval: ReturnType<typeof setInterval> | null = null;
 
 export async function mount(el: HTMLElement): Promise<void> {
   container = el;
@@ -36,7 +32,7 @@ export async function mount(el: HTMLElement): Promise<void> {
             <p class="online-users__count" id="users-count"></p>
           </div>
           <div class="online-users__list" id="users-list">
-            <div class="status-screen"><span class="status-screen__text is-loading">Connecting...</span></div>
+            <div class="status-screen"><span class="status-screen__text is-loading">Loading...</span></div>
           </div>
         </div>
       </div>
@@ -45,35 +41,18 @@ export async function mount(el: HTMLElement): Promise<void> {
 
   document.getElementById('banner-home')!.addEventListener('click', () => navigate('/'));
 
-  stomp = new StompConnection();
-
-  try {
-    await stomp.connect();
-  } catch (_) {
-    const list = document.getElementById('users-list');
-    if (list) list.innerHTML = '<div class="status-screen"><span class="status-screen__text">Unable to connect :(</span></div>';
-    return;
-  }
-
-  stomp.publish('/app/users/enter', gameUsername);
-  pingListener(gameUsername, stomp);
+  // Start presence heartbeat
+  startPresence(gameUsername);
 
   // Fetch initial users
-  try {
-    const users = await get<string[]>('/users');
-    renderUsers(users);
-  } catch (_) {
-    renderUsers([]);
-  }
+  const users = await getOnlineUsers();
+  renderUsers(users);
 
-  // Subscribe to live updates
-  subscription = stomp.subscribe('/topic/users', (message) => {
-    renderUsers(JSON.parse(message.body));
-  });
-
-  const beforeUnload = () => stomp?.publish('/app/users/exit', gameUsername);
-  window.addEventListener('beforeunload', beforeUnload);
-  (el as any).__beforeUnload = beforeUnload;
+  // Poll every 5s for live updates
+  pollInterval = setInterval(async () => {
+    const updated = await getOnlineUsers();
+    renderUsers(updated);
+  }, 5_000);
 }
 
 function renderUsers(names: string[]): void {
@@ -130,23 +109,13 @@ function stringToColor(str: string): string {
 }
 
 export function unmount(): void {
-  if (subscription) {
-    try { subscription.unsubscribe(); } catch (_) { /* */ }
-    subscription = null;
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
   }
 
-  if (container) {
-    const beforeUnload = (container as any).__beforeUnload;
-    if (beforeUnload) {
-      stomp?.publish('/app/users/exit', getGameUsername() || '');
-      window.removeEventListener('beforeunload', beforeUnload);
-    }
-  }
-
-  if (stomp) {
-    stomp.disconnect();
-    stomp = null;
-  }
+  // Don't stop presence here — let the presence service handle it globally
+  // The service continues heartbeating across page navigations
 
   container = null;
 }

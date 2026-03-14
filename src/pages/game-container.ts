@@ -4,7 +4,7 @@
 
 import { navigate } from '../router';
 import { StompConnection } from '../stomp-connection';
-import { pingListener } from '../utils/websocket-utils';
+import { startPresence } from '../services/presence-service';
 import { trimName } from '../utils/misc-utils';
 import { soundEngine } from '../game/sound-engine';
 import { getUser, getGameUsername } from '../auth/auth-service';
@@ -73,9 +73,8 @@ export async function mount(container: HTMLElement, params: Record<string, strin
     return;
   }
 
-  // Publish user enter and heartbeat
-  stomp.publish('/app/users/enter', username);
-  pingListener(username, stomp);
+  // Start presence heartbeat (via gateway REST)
+  startPresence(username);
 
   // Subscribe to game topics
   subscriptions.push(
@@ -306,7 +305,6 @@ export function unmount(): void {
 
   // Disconnect STOMP
   if (stomp) {
-    stomp.publish('/app/users/exit', username);
     stomp.disconnect();
     stomp = null;
   }

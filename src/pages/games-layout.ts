@@ -4,13 +4,12 @@
 
 import { navigate } from '../router';
 import { StompConnection } from '../stomp-connection';
-import { pingListener } from '../utils/websocket-utils';
+import { startPresence } from '../services/presence-service';
 import { getGameUsername } from '../auth/auth-service';
 
 let stomp: StompConnection | null = null;
 let username: string = '';
 let contentEl: HTMLElement | null = null;
-let cleanupFn: (() => void) | null = null;
 let childUnmount: (() => void) | null = null;
 
 export function getStompConnection(): StompConnection {
@@ -75,20 +74,8 @@ export async function mount(container: HTMLElement, params: Record<string, strin
     return;
   }
 
-  // Publish user enter and set up heartbeat
-  stomp.publish('/app/users/enter', gameUsername);
-  pingListener(gameUsername, stomp);
-
-  // Cleanup on page unload
-  const beforeUnload = () => {
-    stomp?.publish('/app/users/exit', gameUsername);
-  };
-  window.addEventListener('beforeunload', beforeUnload);
-
-  cleanupFn = () => {
-    beforeUnload();
-    window.removeEventListener('beforeunload', beforeUnload);
-  };
+  // Start presence heartbeat (via gateway REST)
+  startPresence(gameUsername);
 
   // Now mount the child route
   // The child mounting is handled by individual route handlers that call getStompConnection()
@@ -106,11 +93,6 @@ export function unmount(): void {
   if (childUnmount) {
     childUnmount();
     childUnmount = null;
-  }
-
-  if (cleanupFn) {
-    cleanupFn();
-    cleanupFn = null;
   }
 
   if (stomp) {

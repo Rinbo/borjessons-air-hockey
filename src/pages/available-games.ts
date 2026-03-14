@@ -5,7 +5,7 @@
 import { navigate } from '../router';
 import { get } from '../api/api';
 import { StompConnection } from '../stomp-connection';
-import { pingListener } from '../utils/websocket-utils';
+import { startPresence } from '../services/presence-service';
 import { trimName } from '../utils/misc-utils';
 import { getGameUsername } from '../auth/auth-service';
 import type { Game } from '../types';
@@ -62,9 +62,8 @@ export async function mount(el: HTMLElement): Promise<void> {
     return;
   }
 
-  // Publish user enter and heartbeat
-  stomp.publish('/app/users/enter', gameUsername);
-  pingListener(gameUsername, stomp);
+  // Start presence heartbeat (via gateway REST)
+  startPresence(gameUsername);
 
   // Fetch initial games
   try {
@@ -79,11 +78,6 @@ export async function mount(el: HTMLElement): Promise<void> {
     const games: Game[] = JSON.parse(message.body);
     renderGames(games);
   });
-
-  // Cleanup on unload
-  const beforeUnload = () => stomp?.publish('/app/users/exit', gameUsername);
-  window.addEventListener('beforeunload', beforeUnload);
-  (el as any).__beforeUnload = beforeUnload;
 }
 
 function renderGames(games: Game[]): void {
@@ -156,14 +150,6 @@ export function unmount(): void {
   if (subscription) {
     try { subscription.unsubscribe(); } catch (_) { /* */ }
     subscription = null;
-  }
-
-  if (container) {
-    const beforeUnload = (container as any).__beforeUnload;
-    if (beforeUnload) {
-      stomp?.publish('/app/users/exit', getGameUsername() || '');
-      window.removeEventListener('beforeunload', beforeUnload);
-    }
   }
 
   if (stomp) {
