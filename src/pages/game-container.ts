@@ -148,6 +148,18 @@ function transitionState(newState: GameState): void {
   // Sound effects for state transitions
   if (newState === GameState.SCORE_SCREEN) {
     soundEngine.playGameOver();
+
+    // Increment winner's gamesWon while final scores are still on the players
+    const p1 = players.find(p => p.agency === 'PLAYER_1');
+    const p2 = players.find(p => p.agency === 'PLAYER_2');
+    if (p1 && p2 && p1.score !== p2.score) {
+      (p1.score > p2.score ? p1 : p2).gamesWon++;
+    }
+  }
+
+  // Zero out scores before rendering the new game
+  if (newState === GameState.GAME_RUNNING) {
+    players.forEach(p => { p.score = 0; });
   }
 
   gameState = newState;
