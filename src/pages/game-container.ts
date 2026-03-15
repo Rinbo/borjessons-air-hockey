@@ -24,6 +24,7 @@ let username = '';
 let gameId = '';
 let containerEl: HTMLElement | null = null;
 let contentEl: HTMLElement | null = null;
+let pendingAutoAddAi = false;
 
 export async function mount(container: HTMLElement, params: Record<string, string>): Promise<void> {
   containerEl = container;
@@ -96,6 +97,12 @@ export async function mount(container: HTMLElement, params: Record<string, strin
       players = JSON.parse(msg.body) as Player[];
       if (gameState === GameState.LOBBY) updatePlayers(players);
       if (gameState === GameState.GAME_RUNNING) updateScoreBanner(players, -1);
+
+      // Auto-add AI after server confirms we're connected (players list includes us)
+      if (pendingAutoAddAi && players.length === 1 && players[0].username === username) {
+        pendingAutoAddAi = false;
+        stomp?.publish(`/app/game/${gameId}/add-ai`, '');
+      }
     }),
 
     stomp.subscribe(`/topic/game/${gameId}/game-state`, (msg) => {
@@ -126,6 +133,13 @@ export async function mount(container: HTMLElement, params: Record<string, strin
 
   // Initial render
   renderCurrentState();
+
+  // Check if we should auto-add AI (from matchmaking timeout)
+  const autoAddAi = sessionStorage.getItem('auto_add_ai');
+  if (autoAddAi) {
+    sessionStorage.removeItem('auto_add_ai');
+    pendingAutoAddAi = true;
+  }
 }
 
 function transitionState(newState: GameState): void {

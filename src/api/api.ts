@@ -89,3 +89,11 @@ export async function gatewayPost<T>(path: string, body?: unknown): Promise<T> {
   if (!response.ok) throw statusError(response.status);
   return await response.json();
 }
+
+export async function gatewayDelete(path: string): Promise<void> {
+  const { gatewayUrl } = properties();
+  const requestOptions: RequestOptions = getRequestOptions('DELETE');
+  const response = await fetch(gatewayUrl + path, requestOptions);
+  if (!response.ok) throw statusError(response.status);
+}
+

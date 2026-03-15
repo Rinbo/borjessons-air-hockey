@@ -115,6 +115,16 @@
   animation-delay: 0.35s;
 }
 
+.landing__actions .btn:nth-child(4) {
+  animation: slideUp 0.5s ease backwards;
+  animation-delay: 0.45s;
+}
+
+.landing__actions .btn:nth-child(5) {
+  animation: slideUp 0.5s ease backwards;
+  animation-delay: 0.55s;
+}
+
 .landing__clear {
   position: fixed;
   top: var(--space-2);
@@ -915,6 +925,128 @@
   color: var(--text-muted);
   margin-top: var(--space-2);
 }
+
+/* --- Find Match (Matchmaking) --- */
+
+.find-match {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.find-match__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 50% 40%,
+      rgba(26, 107, 109, 0.06) 0%,
+      transparent 60%
+    );
+}
+
+.find-match__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+  padding: var(--space-8);
+  z-index: 1;
+  animation: slideUp 0.5s ease backwards;
+}
+
+.find-match__puck-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: var(--space-4);
+}
+
+.find-match__puck {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  animation: puckFloat 2s ease-in-out infinite;
+  box-shadow:
+    0 8px 32px rgba(26, 107, 109, 0.3),
+    inset 0 -4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 4px 12px rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 2;
+}
+
+.find-match__radar-ring {
+  position: absolute;
+  inset: -20px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--accent);
+  opacity: 0;
+  animation: radarSweep 2.4s ease-out infinite;
+}
+
+.find-match__radar-ring--delayed {
+  animation-delay: 1.2s;
+}
+
+.find-match__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--primary);
+}
+
+.find-match__subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+.find-match__timer {
+  font-family: var(--font-display);
+  color: var(--accent);
+}
+
+.find-match__timeout-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.find-match__timeout-actions .btn {
+  width: 220px;
+}
+
+.find-match__check {
+  animation: checkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes checkPop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  font-family: inherit;
+  transition: color var(--transition-fast);
+}
+
+.btn-link:hover {
+  color: var(--text-secondary);
+}
+
 
 /* --- Responsive --- */
 

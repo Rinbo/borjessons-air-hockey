@@ -123,3 +123,17 @@
     filter: blur(4px);
   }
 }
+
+/* --- Radar sweep (matchmaking search) --- */
+
+@keyframes radarSweep {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}

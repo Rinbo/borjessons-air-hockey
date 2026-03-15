@@ -64,6 +64,10 @@ export function mount(container: HTMLElement): void {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Join Games
         </button>
+        <button class="btn btn-primary btn-lg" id="btn-find-match">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+          Find Match
+        </button>
         <button class="btn btn-primary btn-lg" id="btn-create">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
           Create Game
@@ -95,6 +99,7 @@ export function mount(container: HTMLElement): void {
   `;
 
   document.getElementById('btn-join')!.addEventListener('click', () => navigate('/games'));
+  document.getElementById('btn-find-match')!.addEventListener('click', () => navigate('/games/find-match'));
   document.getElementById('btn-create')!.addEventListener('click', () => navigate('/games/new'));
   document.getElementById('btn-online')!.addEventListener('click', () => navigate('/games/online'));
   document.getElementById('btn-sign-out')!.addEventListener('click', () => {
@@ -151,6 +156,7 @@ function updateTrialUI(trial: TrialState): void {
   const badge = document.getElementById('trial-badge');
   const overlay = document.getElementById('paywall-overlay');
   const joinBtn = document.getElementById('btn-join') as HTMLButtonElement | null;
+  const findMatchBtn = document.getElementById('btn-find-match') as HTMLButtonElement | null;
   const createBtn = document.getElementById('btn-create') as HTMLButtonElement | null;
 
   if (trial.purchased) {
@@ -158,6 +164,7 @@ function updateTrialUI(trial: TrialState): void {
     if (badge) badge.style.display = 'none';
     if (overlay) overlay.style.display = 'none';
     if (joinBtn) joinBtn.disabled = false;
+    if (findMatchBtn) findMatchBtn.disabled = false;
     if (createBtn) createBtn.disabled = false;
   } else if (trial.canPlay) {
     // Trial user — show remaining games badge
@@ -168,12 +175,14 @@ function updateTrialUI(trial: TrialState): void {
     }
     if (overlay) overlay.style.display = 'none';
     if (joinBtn) joinBtn.disabled = false;
+    if (findMatchBtn) findMatchBtn.disabled = false;
     if (createBtn) createBtn.disabled = false;
   } else {
     // Trial exhausted — show paywall
     if (badge) badge.style.display = 'none';
     if (overlay) overlay.style.display = '';
     if (joinBtn) joinBtn.disabled = true;
+    if (findMatchBtn) findMatchBtn.disabled = true;
     if (createBtn) createBtn.disabled = true;
   }
 
