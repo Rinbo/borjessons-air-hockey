@@ -4,7 +4,7 @@
 
 import properties from '../config/properties';
 import { loginWithGoogle } from './auth-service';
-import { navigate } from '../router';
+import { navigate, consumeReturnUrl } from '../router';
 
 declare global {
   interface Window {
@@ -71,7 +71,7 @@ function initGoogle(container: HTMLElement, clientId: string): void {
 async function handleCredentialResponse(response: CredentialResponse): Promise<void> {
   try {
     await loginWithGoogle(response.credential);
-    navigate('/');
+    navigate(consumeReturnUrl());
   } catch (err) {
     console.error('Google sign-in failed:', err);
     const errorEl = document.getElementById('login-error');

@@ -4,12 +4,12 @@
 
 import { isAuthenticated } from '../auth/auth-service';
 import { renderGoogleButton } from '../auth/google-sign-in';
-import { navigate } from '../router';
+import { navigate, consumeReturnUrl } from '../router';
 
 export function mount(container: HTMLElement): void {
-  // Already logged in? Go home.
+  // Already logged in? Go to return URL or home.
   if (isAuthenticated()) {
-    navigate('/');
+    navigate(consumeReturnUrl());
     return;
   }
 

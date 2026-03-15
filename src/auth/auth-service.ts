@@ -98,9 +98,19 @@ export function getGameUsername(): string | null {
 }
 
 /**
- * Clear the current session.
+ * Clear the current session and revoke the refresh token.
  */
-export function logout(): void {
+export async function logout(): Promise<void> {
+  try {
+    const { gatewayUrl } = properties();
+    await fetch(`${gatewayUrl}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+  } catch {
+    // Best-effort — still clear local state
+  }
+
   accessToken = null;
   currentUser = null;
   notify();

@@ -35,6 +35,27 @@ export function navigate(path: string): void {
   window.location.hash = '#' + path;
 }
 
+const RETURN_URL_KEY = 'auth_return_url';
+
+/**
+ * Save the current hash path so the login page can redirect back after auth.
+ */
+export function saveReturnUrl(): void {
+  const current = window.location.hash.slice(1) || '/';
+  if (current !== '/login') {
+    sessionStorage.setItem(RETURN_URL_KEY, current);
+  }
+}
+
+/**
+ * Consume the saved return URL (returns '/' if none saved).
+ */
+export function consumeReturnUrl(): string {
+  const url = sessionStorage.getItem(RETURN_URL_KEY) || '/';
+  sessionStorage.removeItem(RETURN_URL_KEY);
+  return url;
+}
+
 /**
  * Start the router. Call once from main.ts.
  */

@@ -102,9 +102,9 @@ export function mount(container: HTMLElement): void {
   document.getElementById('btn-find-match')!.addEventListener('click', () => navigate('/games/find-match'));
   document.getElementById('btn-create')!.addEventListener('click', () => navigate('/games/new'));
   document.getElementById('btn-online')!.addEventListener('click', () => navigate('/games/online'));
-  document.getElementById('btn-sign-out')!.addEventListener('click', () => {
+  document.getElementById('btn-sign-out')!.addEventListener('click', async () => {
     clearTrialCache();
-    logout();
+    await logout();
     navigate('/login');
   });
 

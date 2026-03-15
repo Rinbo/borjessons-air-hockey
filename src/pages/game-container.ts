@@ -2,7 +2,7 @@
    Game Container — State Machine + STOMP Subscriptions
    =================================================== */
 
-import { navigate } from '../router';
+import { navigate, saveReturnUrl } from '../router';
 import { StompConnection } from '../stomp-connection';
 import { startPresence } from '../services/presence-service';
 import { trimName } from '../utils/misc-utils';
@@ -33,6 +33,7 @@ export async function mount(container: HTMLElement, params: Record<string, strin
   // Auth guard
   const gameUsername = getGameUsername();
   if (!gameUsername) {
+    saveReturnUrl();
     navigate('/login');
     return;
   }
@@ -42,6 +43,7 @@ export async function mount(container: HTMLElement, params: Record<string, strin
   gameState = GameState.LOBBY;
   messages = [];
   players = [];
+  pendingAutoAddAi = false;
   resetLobbyState();
 
   container.innerHTML = `
