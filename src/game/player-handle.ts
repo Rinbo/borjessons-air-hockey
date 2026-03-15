@@ -109,14 +109,14 @@ export default class PlayerHandle implements GameObject {
 
   private drawHandle(): void {
     const ctx = this.board.getContext();
-    const { width, height } = this.board.getCanvas();
+    const { width, height } = this.board.getSize();
     const px = this.position.x * width;
     const py = this.position.y * height;
     const r = HANDLE_RADIUS.x * width;
-    const offset = r * (1 + SHADOW_PAD);
+    const spriteSize = r * (1 + SHADOW_PAD) * 2;
 
     if (this.sprite) {
-      ctx.drawImage(this.sprite, px - offset, py - offset);
+      ctx.drawImage(this.sprite, px - spriteSize / 2, py - spriteSize / 2, spriteSize, spriteSize);
     } else {
       // Fallback: direct draw (used before first sprite is generated)
       ctx.beginPath();

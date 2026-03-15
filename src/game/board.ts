@@ -30,6 +30,7 @@ export default class Board {
   private playerHandle: PlayerHandle;
   private puck: Puck;
   private size: Size = { width: 350, height: 560 };
+  private dpr: number;
 
   // Snapshot interpolation buffers (puck + opponent)
   private puckBuffer: SnapshotBuffer;
@@ -38,9 +39,10 @@ export default class Board {
   // Cached background
   private bgCanvas: HTMLCanvasElement | null = null;
 
-  constructor(canvas: HTMLCanvasElement, size: Size, broadcastHandle: BroadcastHandle) {
+  constructor(canvas: HTMLCanvasElement, size: Size, broadcastHandle: BroadcastHandle, dpr: number = 1) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+    this.dpr = dpr;
     this.opponentHandle = new OpponentHandle(this);
     this.playerHandle = new PlayerHandle(this, broadcastHandle);
     this.puck = new Puck(this);
@@ -58,11 +60,14 @@ export default class Board {
   public draw(): void {
     const { width, height } = this.size;
 
-    // Draw cached background
+    // Reset transform and clear at physical resolution, then re-apply DPR scale
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.clearRect(0, 0, width * this.dpr, height * this.dpr);
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+
+    // Draw cached background (rendered at logical size with DPR-scaled backing)
     if (this.bgCanvas) {
-      this.ctx.drawImage(this.bgCanvas, 0, 0);
-    } else {
-      this.ctx.clearRect(0, 0, width, height);
+      this.ctx.drawImage(this.bgCanvas, 0, 0, width, height);
     }
 
     // Sample interpolated positions from snapshot buffers
@@ -115,13 +120,16 @@ export default class Board {
   public setSize(size: Size): void {
     if (size.width <= 0 || size.height <= 0) return;
     this.size = size;
+    // Scale the canvas backing store to physical pixels
+    this.canvas.width = size.width * this.dpr;
+    this.canvas.height = size.height * this.dpr;
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.playerHandle.update(PLAYER_HANDLE_START_POS);
     this.opponentHandle.update(OPPONENT_HANDLE_START_POS);
     this.playerHandle.setEventListeners();
     this.regenerateSprites();
     this.regenerateBackground();
     this.draw();
-    this.ctx.restore();
   }
 
   public getSize(): Size {
@@ -140,8 +148,9 @@ export default class Board {
    * Regenerates sprite canvases for handles and puck based on current board size.
    */
   private regenerateSprites(): void {
-    const handleRadius = HANDLE_RADIUS.x * this.size.width;
-    const puckRadius = PUCK_RADIUS.x * this.size.width;
+    // Sprites are rendered at physical-pixel resolution for crisp Retina display
+    const handleRadius = HANDLE_RADIUS.x * this.size.width * this.dpr;
+    const puckRadius = PUCK_RADIUS.x * this.size.width * this.dpr;
 
     this.playerHandle.updateSprite(createPlayerHandleSprite(handleRadius));
     this.opponentHandle.updateSprite(createOpponentHandleSprite(handleRadius));
@@ -157,9 +166,10 @@ export default class Board {
     if (width <= 0 || height <= 0) return;
 
     const bg = document.createElement('canvas');
-    bg.width = width;
-    bg.height = height;
+    bg.width = width * this.dpr;
+    bg.height = height * this.dpr;
     const ctx = bg.getContext('2d')!;
+    ctx.scale(this.dpr, this.dpr);
 
     // ─── 1. Ice surface ─────────────────────────────────────────────────
     const iceGradient = ctx.createLinearGradient(0, 0, 0, height);

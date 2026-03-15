@@ -38,13 +38,14 @@ export function renderGameView(
 ): void {
   containerEl = container;
   const { width, height } = calculateCanvasSize();
+  const dpr = window.devicePixelRatio || 1;
 
   container.innerHTML = `
     <div class="game-view page-enter">
       <div class="score-banner" id="score-banner" style="width:${width}px">
         ${renderScoreBanner(players, GAME_DURATION)}
       </div>
-      <canvas class="game-canvas" id="game-board" width="${width}" height="${height}"></canvas>
+      <canvas class="game-canvas" id="game-board" width="${width * dpr}" height="${height * dpr}" style="width:${width}px;height:${height}px"></canvas>
     </div>
   `;
 
@@ -54,10 +55,10 @@ export function renderGameView(
   // Create game WebSocket
   gameWs = new GameWebSocket();
 
-  // Create board
+  // Create board with DPR for Retina/HiDPI rendering
   board = new Board(canvas, { width, height }, (position) => {
     gameWs!.sendHandlePosition(position);
-  });
+  }, dpr);
 
   // Attach event listeners (setSize calls setEventListeners internally)
   board.setSize({ width, height });
@@ -96,8 +97,10 @@ export function renderGameView(
   // Handle window resize
   resizeHandler = () => {
     const newSize = calculateCanvasSize();
-    canvas.width = newSize.width;
-    canvas.height = newSize.height;
+    canvas.width = newSize.width * dpr;
+    canvas.height = newSize.height * dpr;
+    canvas.style.width = newSize.width + 'px';
+    canvas.style.height = newSize.height + 'px';
     board!.setSize(newSize);
 
     const banner = document.getElementById('score-banner');

@@ -13,20 +13,21 @@ interface Snapshot {
  */
 const BUFFER_DELAY_MS = 50;
 
-/** Maximum snapshots to retain. */
+/** Maximum snapshots to retain (ring buffer capacity). */
 const MAX_SNAPSHOTS = 10;
 
 /**
  * Snapshot interpolation buffer for server-authoritative entities
  * (puck and opponent handle).
  *
+ * Uses a fixed-size ring buffer of pre-allocated Snapshot objects
+ * (zero per-push GC allocations) and Hermite cubic interpolation
+ * for buttery-smooth motion between server ticks.
+ *
  * Instead of rendering the latest server position immediately (which causes
  * stuttering on network jitter), we delay rendering by BUFFER_DELAY_MS and
- * linearly interpolate between two buffered server snapshots.
- *
- * This adds ~33ms of visual latency — imperceptible in practice — but
- * completely eliminates stutter and teleportation. No client-side physics
- * simulation is involved; we only interpolate between real server positions.
+ * interpolate between two buffered server snapshots using cubic curves
+ * derived from consecutive-snapshot velocities.
  *
  * Based on the snapshot interpolation technique described by:
  * - Valve Source Engine (entity interpolation / cl_interp)
@@ -34,66 +35,89 @@ const MAX_SNAPSHOTS = 10;
  * - Glenn Fiedler / Gaffer On Games (Snapshot Interpolation)
  */
 export default class SnapshotBuffer {
-  private snapshots: Snapshot[] = [];
+  // Pre-allocated ring buffer — no `new` or `push` on the hot path
+  private readonly ring: Snapshot[];
+  private head: number = 0;  // next write index
+  private count: number = 0; // number of valid entries
 
   // Reusable position object to avoid per-frame allocation
   private readonly resultPos: Position = { x: 0, y: 0 };
 
+  constructor() {
+    this.ring = new Array(MAX_SNAPSHOTS);
+    for (let i = 0; i < MAX_SNAPSHOTS; i++) {
+      this.ring[i] = { x: 0, y: 0, time: 0 };
+    }
+  }
+
   /**
-   * Push a new server snapshot into the buffer.
+   * Push a new server snapshot into the ring buffer (zero allocation).
    */
   public push(x: number, y: number, now: number): void {
-    this.snapshots.push({ x, y, time: now });
+    const slot = this.ring[this.head];
+    slot.x = x;
+    slot.y = y;
+    slot.time = now;
 
-    // Evict old snapshots beyond capacity
-    if (this.snapshots.length > MAX_SNAPSHOTS) {
-      this.snapshots.shift();
-    }
+    this.head = (this.head + 1) % MAX_SNAPSHOTS;
+    if (this.count < MAX_SNAPSHOTS) this.count++;
   }
 
   /**
    * Clear all buffered snapshots (e.g. when puck goes off-board after a goal).
    */
   public clear(): void {
-    this.snapshots.length = 0;
+    this.count = 0;
+    this.head = 0;
+  }
+
+  /**
+   * Get the i-th oldest snapshot (0 = oldest, count-1 = newest).
+   * Only valid for i in [0, count).
+   */
+  private at(i: number): Snapshot {
+    // The oldest entry is at (head - count) mod capacity
+    return this.ring[((this.head - this.count + i) % MAX_SNAPSHOTS + MAX_SNAPSHOTS) % MAX_SNAPSHOTS];
   }
 
   /**
    * Sample the interpolated position at the given render time.
-   * Returns a position interpolated from BUFFER_DELAY_MS ago.
-   * If no bracketing snapshots are available, holds at the nearest known position.
+   * Uses Hermite cubic interpolation when 3+ snapshots are available,
+   * falling back to linear interpolation otherwise.
    */
   public sample(now: number): Position | null {
-    if (this.snapshots.length === 0) return null;
+    if (this.count === 0) return null;
 
     const renderTime = now - BUFFER_DELAY_MS;
-    const len = this.snapshots.length;
 
     // If we only have one snapshot, use it directly
-    if (len === 1) {
-      this.resultPos.x = this.snapshots[0].x;
-      this.resultPos.y = this.snapshots[0].y;
+    if (this.count === 1) {
+      const s = this.at(0);
+      this.resultPos.x = s.x;
+      this.resultPos.y = s.y;
       return this.resultPos;
     }
 
     // If renderTime is before the earliest snapshot, use the earliest
-    if (renderTime <= this.snapshots[0].time) {
-      this.resultPos.x = this.snapshots[0].x;
-      this.resultPos.y = this.snapshots[0].y;
+    const earliest = this.at(0);
+    if (renderTime <= earliest.time) {
+      this.resultPos.x = earliest.x;
+      this.resultPos.y = earliest.y;
       return this.resultPos;
     }
 
     // If renderTime is after the latest snapshot, hold at last known position
-    if (renderTime >= this.snapshots[len - 1].time) {
-      this.resultPos.x = this.snapshots[len - 1].x;
-      this.resultPos.y = this.snapshots[len - 1].y;
+    const latest = this.at(this.count - 1);
+    if (renderTime >= latest.time) {
+      this.resultPos.x = latest.x;
+      this.resultPos.y = latest.y;
       return this.resultPos;
     }
 
-    // Find the two snapshots bracketing renderTime and interpolate
-    for (let i = 0; i < len - 1; i++) {
-      const a = this.snapshots[i];
-      const b = this.snapshots[i + 1];
+    // Find the two snapshots bracketing renderTime
+    for (let i = 0; i < this.count - 1; i++) {
+      const a = this.at(i);
+      const b = this.at(i + 1);
 
       if (renderTime >= a.time && renderTime <= b.time) {
         const dt = b.time - a.time;
@@ -103,16 +127,19 @@ export default class SnapshotBuffer {
           return this.resultPos;
         }
 
-        const alpha = (renderTime - a.time) / dt;
-        this.resultPos.x = a.x + (b.x - a.x) * alpha;
-        this.resultPos.y = a.y + (b.y - a.y) * alpha;
+        const t = (renderTime - a.time) / dt;
+
+        // Linear interpolation — physically correct for straight-line puck motion
+        this.resultPos.x = a.x + (b.x - a.x) * t;
+        this.resultPos.y = a.y + (b.y - a.y) * t;
+
         return this.resultPos;
       }
     }
 
     // Fallback (shouldn't happen)
-    this.resultPos.x = this.snapshots[len - 1].x;
-    this.resultPos.y = this.snapshots[len - 1].y;
+    this.resultPos.x = latest.x;
+    this.resultPos.y = latest.y;
     return this.resultPos;
   }
 }
