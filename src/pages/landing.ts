@@ -76,6 +76,14 @@ export function mount(container: HTMLElement): void {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
           See who is online
         </button>
+        <button class="btn btn-outline btn-lg" id="btn-leaderboard">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          Leaderboard
+        </button>
+        <button class="btn btn-outline btn-lg" id="btn-profile">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          My Profile
+        </button>
       </div>
 
       <div id="paywall-overlay" class="paywall-overlay" style="display:none">
@@ -102,6 +110,8 @@ export function mount(container: HTMLElement): void {
   document.getElementById('btn-find-match')!.addEventListener('click', () => navigate('/games/find-match'));
   document.getElementById('btn-create')!.addEventListener('click', () => navigate('/games/new'));
   document.getElementById('btn-online')!.addEventListener('click', () => navigate('/games/online'));
+  document.getElementById('btn-leaderboard')!.addEventListener('click', () => navigate('/leaderboard'));
+  document.getElementById('btn-profile')!.addEventListener('click', () => navigate('/profile'));
   document.getElementById('btn-sign-out')!.addEventListener('click', async () => {
     clearTrialCache();
     await logout();

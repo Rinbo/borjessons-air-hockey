@@ -27,6 +27,8 @@ import * as gameContainer from './pages/game-container';
 import * as onlineUsers from './pages/online-users';
 import * as serverStarting from './pages/server-starting';
 import * as findMatch from './pages/find-match';
+import * as leaderboard from './pages/leaderboard';
+import * as profile from './pages/profile';
 import * as error from './pages/error';
 
 // Register routes
@@ -38,6 +40,9 @@ addRoute('/games/starting/:gameId', serverStarting.mount, serverStarting.unmount
 addRoute('/games/find-match', findMatch.mount, findMatch.unmount);
 addRoute('/games/online', onlineUsers.mount, onlineUsers.unmount);
 addRoute('/games/:id', gameContainer.mount, gameContainer.unmount);
+addRoute('/leaderboard', leaderboard.mount, leaderboard.unmount);
+addRoute('/profile', profile.mount, profile.unmount);
+addRoute('/profile/:userId', profile.mount, profile.unmount);
 addRoute('/error', error.mount, error.unmount);
 
 // Boot the app — dev gate in production only
