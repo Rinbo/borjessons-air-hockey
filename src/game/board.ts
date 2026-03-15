@@ -190,7 +190,7 @@ export default class Board {
     ctx.restore();
 
     // ─── 2. Goal creases (semi-circles around goals) ────────────────────
-    const creaseRadius = width * 0.18;
+    const creaseRadius = width * GOAL_WIDTH;
 
     // Top crease
     ctx.save();

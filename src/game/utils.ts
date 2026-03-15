@@ -194,9 +194,9 @@ export function createPuckSprite(radius: number): HTMLCanvasElement {
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
   const rimGrad = ctx.createRadialGradient(cx, cy, radius * 0.82, cx, cy, radius);
-  rimGrad.addColorStop(0, '#2a2a3a');
-  rimGrad.addColorStop(0.4, '#1a1a28');
-  rimGrad.addColorStop(1, '#0a0a12');
+  rimGrad.addColorStop(0, '#3a3a3a');
+  rimGrad.addColorStop(0.4, '#2a2a2a');
+  rimGrad.addColorStop(1, '#141414');
   ctx.fillStyle = rimGrad;
   ctx.fill();
 
@@ -206,9 +206,9 @@ export function createPuckSprite(radius: number): HTMLCanvasElement {
   ctx.arc(cx, cy, innerRadius, 0, Math.PI * 2);
   // Centered gradient with very subtle falloff → reads as flat
   const surfGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, innerRadius);
-  surfGrad.addColorStop(0, '#2e2e42');
-  surfGrad.addColorStop(0.6, '#2a2a3c');
-  surfGrad.addColorStop(1, '#222234');
+  surfGrad.addColorStop(0, '#484848');
+  surfGrad.addColorStop(0.6, '#3a3a3a');
+  surfGrad.addColorStop(1, '#2a2a2a');
   ctx.fillStyle = surfGrad;
   ctx.fill();
 
@@ -218,7 +218,7 @@ export function createPuckSprite(radius: number): HTMLCanvasElement {
     const frac = i / (ringCount + 1);
     ctx.beginPath();
     ctx.arc(cx, cy, innerRadius * frac, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(200, 200, 220, ${0.07 + (i % 2) * 0.04})`;
+    ctx.strokeStyle = `rgba(200, 200, 200, ${0.07 + (i % 2) * 0.04})`;
     ctx.lineWidth = Math.max(0.5, radius * 0.018);
     ctx.stroke();
   }
@@ -226,7 +226,7 @@ export function createPuckSprite(radius: number): HTMLCanvasElement {
   // 5 ─ Edge highlight (rim light, upper-left — suggests disc edge catching light)
   ctx.beginPath();
   ctx.arc(cx, cy, radius, Math.PI * 0.85, Math.PI * 1.65);
-  ctx.strokeStyle = 'rgba(180, 190, 220, 0.22)';
+  ctx.strokeStyle = 'rgba(200, 200, 210, 0.22)';
   ctx.lineWidth = Math.max(1, radius * 0.05);
   ctx.lineCap = 'round';
   ctx.stroke();

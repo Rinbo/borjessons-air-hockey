@@ -63,7 +63,7 @@ export default class PlayerHandle implements GameObject {
 
     // Expand hit-target for coarse pointers (touch) so fat fingers don't miss
     this.isTouch = event.pointerType === 'touch';
-    const hitScale = this.isTouch ? 1.5 : 1.0;
+    const hitScale = this.isTouch ? 1.8 : 1.0;
     if (this.isWithinBoundsOfHandle(x, y, hitScale)) {
       this.isDragging = true;
       event.preventDefault();

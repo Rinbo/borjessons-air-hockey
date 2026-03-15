@@ -39,7 +39,7 @@ export default class Puck implements GameObject {
       // Fallback before sprite is generated
       ctx.beginPath();
       ctx.arc(px, py, r, 0, 2 * Math.PI);
-      ctx.fillStyle = '#333344';
+      ctx.fillStyle = '#3a3a3a';
       ctx.fill();
     }
   }

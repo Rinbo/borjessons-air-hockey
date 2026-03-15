@@ -192,10 +192,10 @@
     // ═══════════════════════════════════════════════════════════════
     const ASPECT_RATIO = 0.625;
     const MAX_WIDTH = 500;
-    const HANDLE_RADIUS_X = 0.09;
+    const HANDLE_RADIUS_X = 0.065;
     const HANDLE_RADIUS_Y = HANDLE_RADIUS_X * ASPECT_RATIO;
     const PLAYER_HANDLE_START_POS = { x: 0.5, y: 0.8 };
-    const GOAL_WIDTH  = 0.18;
+    const GOAL_WIDTH  = 0.15;
     const GOAL_HEIGHT = 0.015;
     const GOAL_ANGLE  = 0.03;
     const SHADOW_PAD  = 0.35;
@@ -315,7 +315,7 @@
       c.restore();
 
       // Goal creases
-      const cr = width * 0.18;
+      const cr = width * GOAL_WIDTH;
       c.save(); c.beginPath(); c.arc(width/2, 0, cr, 0, Math.PI);
       c.fillStyle = 'rgba(200,60,60,0.06)'; c.fill();
       c.strokeStyle = 'rgba(180,50,50,0.18)'; c.lineWidth = 1.5; c.stroke(); c.restore();
@@ -483,7 +483,7 @@
       cachedRect = canvas.getBoundingClientRect();
       const { x, y } = getCanvasOffset(event);
 
-      const hitScale = event.pointerType === 'touch' ? 1.5 : 1.0;
+      const hitScale = event.pointerType === 'touch' ? 1.8 : 1.0;
       if (isWithinBoundsOfHandle(x, y, hitScale)) {
         isDragging = true;
         event.preventDefault();
