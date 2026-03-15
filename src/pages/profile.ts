@@ -44,7 +44,7 @@ export function mount(container: HTMLElement, params: Record<string, string>): v
     </div>
   `;
 
-  document.getElementById('btn-back')!.addEventListener('click', () => navigate('/'));
+  document.getElementById('btn-back')!.addEventListener('click', () => history.back());
 
   const userId = params.userId;
   loadProfile(userId);
