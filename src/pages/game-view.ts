@@ -7,11 +7,12 @@ import GameWebSocket from '../game/game-websocket';
 import { getAgencyExtention } from '../game/utils';
 import { soundEngine, CollisionEvent } from '../game/sound-engine';
 import { ASPECT_RATIO, MAX_WIDTH, GAME_DURATION } from '../game/constants';
+import { navigate } from '../router';
 import { trimName } from '../utils/misc-utils';
 import type { Player } from '../types';
 
-// Total vertical chrome: top-banner(36) + game-view padding(4) + score-banner(48) + margin(8) + canvas border(4) = 100
-const BANNER_HEIGHTS = 100;
+// Vertical chrome during gameplay: score-banner(28) + margin(4) + canvas border(4) = 36
+const BANNER_HEIGHTS = 36;
 const MARGIN = 10;
 
 let board: Board | null = null;
@@ -37,6 +38,13 @@ export function renderGameView(
   username: string
 ): void {
   containerEl = container;
+
+  // Hide top banner and go fullscreen to maximise game board area
+  const topBanner = document.getElementById('banner-home');
+  const layout = topBanner?.closest('.games-layout') as HTMLElement | null;
+  if (topBanner) topBanner.style.display = 'none';
+  if (layout) layout.classList.add('games-layout--fullscreen');
+
   const { width, height } = calculateCanvasSize();
   const dpr = window.devicePixelRatio || 1;
 
@@ -48,6 +56,9 @@ export function renderGameView(
       <canvas class="game-canvas" id="game-board" width="${width * dpr}" height="${height * dpr}" style="width:${width}px;height:${height}px"></canvas>
     </div>
   `;
+
+  // Wire up exit button
+  document.getElementById('score-exit')?.addEventListener('click', () => navigate('/'));
 
   const canvas = document.getElementById('game-board') as HTMLCanvasElement;
   const agency = getAgencyExtention(players, username);
@@ -121,6 +132,9 @@ export function updateScoreBanner(players: Player[], remainingSeconds: number): 
   }
 
   banner.innerHTML = renderScoreBanner(players, seconds);
+
+  // Re-wire exit button after innerHTML re-render
+  document.getElementById('score-exit')?.addEventListener('click', () => navigate('/'));
 }
 
 function updateTimer(seconds: number): void {
@@ -129,16 +143,26 @@ function updateTimer(seconds: number): void {
 }
 
 function renderScoreBanner(players: Player[], remainingSeconds: number): string {
-  const playerHtml = players.map(p => `
-    <div class="score-banner__player">
-      <span class="score-banner__player-name">${trimName(p.username)}</span>
-      <span class="score-banner__player-score">${p.score}</span>
-    </div>
-  `).join('');
+  const p1 = players[0];
+  const p2 = players[1];
+
+  const playerCell = (p: Player | undefined) => {
+    if (!p) return '<div class="score-banner__player"></div>';
+    return `
+      <div class="score-banner__player">
+        <span class="score-banner__player-name">${trimName(p.username)}</span>
+        <span class="score-banner__player-score">${p.score}</span>
+      </div>
+    `;
+  };
 
   return `
-    ${playerHtml}
+    <button class="score-banner__exit" id="score-exit" title="Leave game">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    ${playerCell(p1)}
     <span class="score-banner__timer" id="score-timer">${remainingSeconds}</span>
+    ${playerCell(p2)}
   `;
 }
 
@@ -162,6 +186,12 @@ export function destroyGameView(): void {
     window.removeEventListener('resize', resizeHandler);
     resizeHandler = null;
   }
+
+  // Restore top banner and layout padding
+  const topBanner = document.getElementById('banner-home');
+  const layout = topBanner?.closest('.games-layout') as HTMLElement | null;
+  if (topBanner) topBanner.style.display = '';
+  if (layout) layout.classList.remove('games-layout--fullscreen');
 
   containerEl = null;
 }

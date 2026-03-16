@@ -183,6 +183,11 @@
   flex-direction: column;
   padding-top: 40px;
   /* top-banner height */
+  transition: padding-top var(--transition-fast);
+}
+
+.games-layout--fullscreen {
+  padding-top: 0;
 }
 
 .games-layout__content {
@@ -499,48 +504,92 @@
   justify-content: center;
   height: 100%;
   overflow: hidden;
-  padding-top: var(--space-1);
 }
 
 .score-banner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--surface);
-  height: 48px;
-  margin-bottom: var(--space-2);
+  height: 28px;
+  margin-bottom: var(--space-1);
   position: relative;
   box-shadow: var(--shadow-xs);
 }
 
+.score-banner__exit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 100%;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-right: 1px solid var(--border-light);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.score-banner__exit:hover {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+.score-banner__exit svg {
+  width: 12px;
+  height: 12px;
+}
+
 .score-banner__player {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 0 var(--space-3);
-  font-size: var(--text-xs);
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  font-size: 11px;
   font-weight: var(--weight-medium);
+  min-width: 0;
+  flex: 1;
+}
+
+.score-banner__player:last-child {
+  flex-direction: row-reverse;
 }
 
 .score-banner__player-name {
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
+  flex: 1;
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
+  mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
+}
+
+.score-banner__player:last-child .score-banner__player-name {
+  text-align: right;
+  -webkit-mask-image: linear-gradient(to left, black calc(100% - 16px), transparent);
+  mask-image: linear-gradient(to left, black calc(100% - 16px), transparent);
 }
 
 .score-banner__player-score {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   color: var(--primary);
+  flex-shrink: 0;
 }
 
 .score-banner__timer {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  flex-shrink: 0;
+  padding: 0 var(--space-2);
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   color: var(--primary);
+  text-align: center;
+  min-width: 32px;
 }
 
 .game-canvas {
