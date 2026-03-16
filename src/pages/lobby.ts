@@ -95,7 +95,7 @@ export function renderLobby(
   });
 
   btnReady.addEventListener('click', () => {
-    const currentlyReady = isCurrentPlayerReady(players);
+    const currentlyReady = btnReady.classList.contains('btn-primary');
     callbacks.setReady(!currentlyReady);
   });
 
