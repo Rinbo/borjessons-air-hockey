@@ -13,7 +13,7 @@ import type { Player } from '../types';
 
 // Vertical chrome during gameplay: score-banner(28) + margin(4) + canvas border(4) = 36
 const BANNER_HEIGHTS = 36;
-const MARGIN = 10;
+const MARGIN = 6;
 
 let board: Board | null = null;
 let gameWs: GameWebSocket | null = null;

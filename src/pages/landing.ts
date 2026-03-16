@@ -32,6 +32,8 @@ export function mount(container: HTMLElement): void {
         <button class="btn btn-sm btn-outline" id="btn-sign-out">Sign out</button>
       </div>
 
+      <div class="landing__spacer-top"></div>
+
       <div class="landing__header">
         <div class="landing__subtitle">BORJESSONS</div>
         <h1 class="landing__title ripple">Air Hockey</h1>
@@ -57,6 +59,8 @@ export function mount(container: HTMLElement): void {
           </svg>
         </div>
       </div>
+
+      <div class="landing__spacer-mid"></div>
 
       <div class="landing__actions">
         <div class="trial-badge" id="trial-badge" style="display:none"></div>
@@ -94,6 +98,13 @@ export function mount(container: HTMLElement): void {
           <p class="paywall-note">Payment integration coming soon</p>
         </div>
       </div>
+
+      <div class="landing__spacer-bottom"></div>
+
+      <footer class="landing__footer">
+        <div class="landing__footer-dash"></div>
+        <span class="landing__footer-text">Dockside Labs</span>
+      </footer>
 
       <div id="dev-panel" class="dev-panel" style="display:none">
         <div class="dev-panel__title">🔧 Dev Tools</div>
