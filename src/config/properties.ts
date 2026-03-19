@@ -5,7 +5,9 @@ export default function properties() {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const devMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
+  const rtcSignalUrl = import.meta.env.VITE_RTC_SIGNAL_URL || null;
+
   if (!restBaseUrl || !wsBaseUrl) throw new Error('unable to load runtime properties');
 
-  return { restBaseUrl, wsBaseUrl, gatewayUrl, googleClientId, devMode };
+  return { restBaseUrl, wsBaseUrl, gatewayUrl, googleClientId, devMode, rtcSignalUrl };
 }

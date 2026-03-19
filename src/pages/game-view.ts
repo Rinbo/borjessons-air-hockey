@@ -3,7 +3,7 @@
    =================================================== */
 
 import Board, { BroadcastState } from '../game/board';
-import GameWebSocket from '../game/game-websocket';
+import type { TransportChannel } from '../game/create-transport';
 import { getAgencyExtention } from '../game/utils';
 import { soundEngine, CollisionEvent } from '../game/sound-engine';
 import { ASPECT_RATIO, MAX_WIDTH, GAME_DURATION } from '../game/constants';
@@ -16,7 +16,6 @@ const BANNER_HEIGHTS = 36;
 const MARGIN = 6;
 
 let board: Board | null = null;
-let gameWs: GameWebSocket | null = null;
 let rafId: number | null = null;
 let resizeHandler: (() => void) | null = null;
 let containerEl: HTMLElement | null = null;
@@ -31,12 +30,20 @@ function calculateCanvasSize(): { width: number; height: number } {
   return { width: w, height: h };
 }
 
+/**
+ * Renders the game board and starts the render loop.
+ *
+ * The transport is already connected (established in the lobby) — this
+ * function just creates the Board and wires up the handle position
+ * broadcast. Returns a board-state handler that the caller should
+ * install on the transport.
+ */
 export function renderGameView(
   container: HTMLElement,
-  gameId: string,
+  transport: TransportChannel,
   players: Player[],
   username: string
-): void {
+): (state: BroadcastState) => void {
   containerEl = container;
 
   // Hide top banner and go fullscreen to maximise game board area
@@ -61,14 +68,10 @@ export function renderGameView(
   document.getElementById('score-exit')?.addEventListener('click', () => navigate('/'));
 
   const canvas = document.getElementById('game-board') as HTMLCanvasElement;
-  const agency = getAgencyExtention(players, username);
-
-  // Create game WebSocket
-  gameWs = new GameWebSocket();
 
   // Create board with DPR for Retina/HiDPI rendering
   board = new Board(canvas, { width, height }, (position) => {
-    gameWs!.sendHandlePosition(position);
+    transport.sendHandlePosition(position);
   }, dpr);
 
   // Attach event listeners (setSize calls setEventListeners internally)
@@ -76,27 +79,6 @@ export function renderGameView(
 
   // Track remaining seconds for the banner
   let lastRenderedSeconds = GAME_DURATION;
-
-  // Receive board state
-  gameWs.onBoardState((state: BroadcastState) => {
-    board!.update(state);
-
-    // Sound effects based on collision event
-    soundEngine.playCollision(state.collisionEvent);
-
-    // Haptic feedback on goal (Android only — Safari ignores vibrate)
-    if ((state.collisionEvent & CollisionEvent.GOAL) && 'vibrate' in navigator) {
-      navigator.vibrate([100, 50, 100]);
-    }
-
-    const seconds = Math.ceil(state.remainingSeconds);
-    if (seconds !== lastRenderedSeconds) {
-      lastRenderedSeconds = seconds;
-      updateTimer(seconds);
-    }
-  });
-
-  gameWs.connect(gameId, agency);
 
   // rAF render loop
   function render() {
@@ -118,6 +100,25 @@ export function renderGameView(
     if (banner) banner.style.width = newSize.width + 'px';
   };
   window.addEventListener('resize', resizeHandler);
+
+  // Return the board-state handler for the caller to install
+  return (state: BroadcastState) => {
+    board!.update(state);
+
+    // Sound effects based on collision event
+    soundEngine.playCollision(state.collisionEvent);
+
+    // Haptic feedback on goal (Android only — Safari ignores vibrate)
+    if ((state.collisionEvent & CollisionEvent.GOAL) && 'vibrate' in navigator) {
+      navigator.vibrate([100, 50, 100]);
+    }
+
+    const seconds = Math.ceil(state.remainingSeconds);
+    if (seconds !== lastRenderedSeconds) {
+      lastRenderedSeconds = seconds;
+      updateTimer(seconds);
+    }
+  };
 }
 
 export function updateScoreBanner(players: Player[], remainingSeconds: number): void {
@@ -170,11 +171,6 @@ export function destroyGameView(): void {
   if (rafId !== null) {
     cancelAnimationFrame(rafId);
     rafId = null;
-  }
-
-  if (gameWs) {
-    gameWs.disconnect();
-    gameWs = null;
   }
 
   if (board) {

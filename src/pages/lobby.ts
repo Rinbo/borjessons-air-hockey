@@ -4,6 +4,7 @@
 
 import { trimName } from '../utils/misc-utils';
 import { formatTime } from '../utils/time-utils';
+import { isWebRTCSupported } from '../game/create-transport';
 import type { Message, Player } from '../types';
 
 // Inline SVG icons
@@ -31,12 +32,15 @@ export function renderLobby(
 ): void {
   if (username) currentUsername = username;
   const isReady = isCurrentPlayerReady(players);
+  const webrtcOk = isWebRTCSupported();
   const html = `
     <div class="lobby page-enter">
       <h2 class="lobby__title">Lobby</h2>
 
+      ${!webrtcOk ? `<div class="lobby__warning">⚠️ Your browser does not support WebRTC. You cannot play.</div>` : ''}
+
       <div class="lobby__toolbar">
-        <button class="btn ${isReady ? 'btn-primary' : 'btn-outline'}" id="btn-ready">
+        <button class="btn ${isReady ? 'btn-primary' : 'btn-outline'}" id="btn-ready" ${!webrtcOk ? 'disabled' : ''}>
           ${isReady ? '✓ Ready' : 'Ready'}
         </button>
         <div class="lobby__toolbar-right">

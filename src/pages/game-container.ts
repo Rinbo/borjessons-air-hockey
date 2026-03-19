@@ -9,10 +9,14 @@ import { trimName } from '../utils/misc-utils';
 import { soundEngine } from '../game/sound-engine';
 import { getUser, getGameUsername } from '../auth/auth-service';
 import { refreshTrialState } from '../auth/trial-service';
+import { createTransportChannel, type TransportChannel } from '../game/create-transport';
+import { getAgencyExtention } from '../game/utils';
+import { BroadcastState } from '../game/board';
 import { GameState } from '../types';
 import type { Player, Message } from '../types';
 import { renderLobby, updateChat, updatePlayers, resetState as resetLobbyState } from './lobby';
 import { renderGameView, updateScoreBanner, destroyGameView } from './game-view';
+
 import type { StompSubscription } from '@stomp/stompjs';
 
 let stomp: StompConnection | null = null;
@@ -25,6 +29,16 @@ let gameId = '';
 let containerEl: HTMLElement | null = null;
 let contentEl: HTMLElement | null = null;
 let pendingAutoAddAi = false;
+
+// ── Transport (WebRTC) — connected in the lobby, reused across games ──
+let transport: TransportChannel | null = null;
+let transportConnecting = false;
+/**
+ * Mutable handler that the forwarding callback delegates to.
+ * null during lobby (messages silently dropped — no game is running).
+ * Set to the real board-state handler when the game starts.
+ */
+let boardStateHandler: ((state: BroadcastState) => void) | null = null;
 
 export async function mount(container: HTMLElement, params: Record<string, string>): Promise<void> {
   containerEl = container;
@@ -105,6 +119,9 @@ export async function mount(container: HTMLElement, params: Record<string, strin
         pendingAutoAddAi = false;
         stomp?.publish(`/app/game/${gameId}/add-ai`, '');
       }
+
+      // Pre-connect WebRTC as soon as we know our agency (player is in the list)
+      ensureTransportConnected();
     }),
 
     stomp.subscribe(`/topic/game/${gameId}/game-state`, (msg) => {
@@ -144,11 +161,49 @@ export async function mount(container: HTMLElement, params: Record<string, strin
   }
 }
 
+// ── Transport Pre-Connection ────────────────────────────────────────
+
+/**
+ * Establishes the WebRTC transport in the background as soon as the
+ * local player's agency is known (from the players list). The
+ * connection is established once and reused across game→score→lobby
+ * transitions, so there is zero handshake delay when the game starts.
+ */
+function ensureTransportConnected(): void {
+  if (transport || transportConnecting) return;
+
+  // Can only connect once we know our agency
+  const me = players.find(p => p.username === username);
+  if (!me) return;
+
+  const agency = getAgencyExtention(players, username);
+  transportConnecting = true;
+
+  // Use a forwarding callback that delegates to the mutable boardStateHandler.
+  // During the lobby this is null (no-op). When the game starts, the handler
+  // is swapped in so board updates flow immediately — no registration delay.
+  createTransportChannel(gameId, agency, (state: BroadcastState) => {
+    if (boardStateHandler) boardStateHandler(state);
+  })
+    .then(t => {
+      transport = t;
+      transportConnecting = false;
+      console.log('[GameContainer] Transport pre-connected in lobby');
+    })
+    .catch(err => {
+      transportConnecting = false;
+      console.warn('[GameContainer] Transport pre-connect failed (will retry on next players update):', err);
+    });
+}
+
+// ── State Machine ───────────────────────────────────────────────────
+
 function transitionState(newState: GameState): void {
   if (newState === gameState) return;
 
   // Clean up game view if leaving GAME_RUNNING
   if (gameState === GameState.GAME_RUNNING) {
+    boardStateHandler = null;
     destroyGameView();
   }
 
@@ -201,7 +256,20 @@ function renderCurrentState(): void {
       break;
 
     case GameState.GAME_RUNNING:
-      renderGameView(contentEl, gameId, players, username);
+      if (transport) {
+        // Transport already connected — install the board-state handler
+        boardStateHandler = renderGameView(contentEl, transport, players, username);
+      } else {
+        // Edge case: transport not yet ready (extremely slow connection).
+        // Show a brief "connecting" state and retry when transport arrives.
+        contentEl.innerHTML = '<div class="status-screen"><span class="status-screen__text is-loading">Connecting to game...</span></div>';
+        const waitForTransport = setInterval(() => {
+          if (transport && contentEl && gameState === GameState.GAME_RUNNING) {
+            clearInterval(waitForTransport);
+            boardStateHandler = renderGameView(contentEl, transport, players, username);
+          }
+        }, 100);
+      }
       break;
 
     case GameState.SCORE_SCREEN:
@@ -301,8 +369,17 @@ function getWinner(): string {
 export function unmount(): void {
   // Clean up game view if active
   if (gameState === GameState.GAME_RUNNING) {
+    boardStateHandler = null;
     destroyGameView();
   }
+
+  // Disconnect transport (WebRTC)
+  if (transport) {
+    transport.disconnect();
+    transport = null;
+  }
+  transportConnecting = false;
+  boardStateHandler = null;
 
   // Unsubscribe
   subscriptions.forEach(sub => {

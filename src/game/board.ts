@@ -2,7 +2,6 @@ import { GOAL_ANGLE, GOAL_HEIGHT, GOAL_WIDTH, HANDLE_RADIUS, OPPONENT_HANDLE_STA
 import OpponentHandle from './opponent-handle';
 import PlayerHandle from './player-handle';
 import Puck from './puck';
-import SnapshotBuffer from './snapshot-buffer';
 import { createPlayerHandleSprite, createOpponentHandleSprite, createPuckSprite } from './utils';
 
 type Size = { width: number; height: number };
@@ -32,9 +31,8 @@ export default class Board {
   private size: Size = { width: 350, height: 560 };
   private dpr: number;
 
-  // Snapshot interpolation buffers (puck + opponent)
-  private puckBuffer: SnapshotBuffer;
-  private opponentBuffer: SnapshotBuffer;
+  // Whether the puck has a valid server position (hidden after goals)
+  private puckVisible: boolean = false;
 
   // Cached background
   private bgCanvas: HTMLCanvasElement | null = null;
@@ -47,15 +45,14 @@ export default class Board {
     this.playerHandle = new PlayerHandle(this, broadcastHandle);
     this.puck = new Puck(this);
     this.size = size;
-    this.puckBuffer = new SnapshotBuffer();
-    this.opponentBuffer = new SnapshotBuffer();
     this.regenerateSprites();
     this.regenerateBackground();
   }
 
   /**
-   * Draws the board with snapshot-interpolated positions for puck and opponent.
-   * Player handle is drawn at its immediate local position (no delay).
+   * Draws the board — all entities at their latest server positions.
+   * No interpolation delay; WebRTC's unreliable DataChannel eliminates
+   * the TCP head-of-line jitter that snapshot buffering was designed for.
    */
   public draw(): void {
     const { width, height } = this.size;
@@ -70,21 +67,14 @@ export default class Board {
       this.ctx.drawImage(this.bgCanvas, 0, 0, width, height);
     }
 
-    // Sample interpolated positions from snapshot buffers
-    const now = performance.now();
-
-    const puckPos = this.puckBuffer.sample(now);
-    if (puckPos) this.puck.update(puckPos);
-
-    const opponentPos = this.opponentBuffer.sample(now);
-    if (opponentPos) this.opponentHandle.update(opponentPos);
-
     this.playerHandle.draw();
     this.opponentHandle.draw();
 
-    // Only draw puck when buffer has a valid position — after a goal the
-    // buffer is cleared so the puck disappears until the server resets it.
-    if (puckPos) this.puck.draw();
+    // Only draw puck when visible — after a goal the server sends off-board
+    // coords and we hide it until the server resets.
+    if (this.puckVisible) {
+      this.puck.draw();
+    }
   }
 
   public getCanvas(): HTMLCanvasElement {
@@ -96,25 +86,23 @@ export default class Board {
   }
 
   /**
-   * Called when a new server state arrives. Pushes positions into snapshot
-   * buffers for interpolation — no physics simulation, just real positions.
+   * Called when a new server state arrives. Applies positions directly —
+   * no buffering or interpolation delay.
    */
   public update(broadcastState: BroadcastState): void {
-    const now = performance.now();
-
     // Skip off-board puck positions (after a goal, server sends (-1,-1) which
-    // mirrors to (2,2) for P2). Clear the buffer so we don't interpolate
-    // towards them. Use a generous threshold — the puck can legitimately be
-    // slightly past 0/1 as it enters the goal.
+    // mirrors to (2,2) for P2). Hide the puck until the server resets it.
     const px = broadcastState.puck.x;
     const py = broadcastState.puck.y;
+
     if (px < -0.5 || px > 1.5 || py < -0.5 || py > 1.5) {
-      this.puckBuffer.clear();
+      this.puckVisible = false;
     } else {
-      this.puckBuffer.push(px, py, now);
+      this.puckVisible = true;
+      this.puck.update(broadcastState.puck);
     }
 
-    this.opponentBuffer.push(broadcastState.opponent.x, broadcastState.opponent.y, now);
+    this.opponentHandle.update(broadcastState.opponent);
   }
 
   public setSize(size: Size): void {

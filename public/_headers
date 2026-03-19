@@ -1,10 +1,10 @@
 # Prevent caching of index.html so new deploys are picked up immediately.
 # Hashed assets (JS/CSS) are cache-busted by Vite's content hashing.
+# NOTE: Do NOT add immutable caching for /assets/* here. Cloudflare Pages
+# handles hashed-asset caching automatically. Adding it here is dangerous
+# because _headers also applies to SPA-fallback (404→index.html) responses,
+# which can cause HTML to be cached as CSS/JS at the CDN edge for a year.
 /
   Cache-Control: no-cache, no-store, must-revalidate
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
-
-# Hashed assets can be cached aggressively (immutable content hash)
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
