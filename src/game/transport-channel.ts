@@ -1,9 +1,9 @@
 import { BroadcastState, Position } from './board';
 
 /**
- * Transport-agnostic channel for the high-frequency game board-state
- * communication. Implementations include WebSocket (fallback) and
- * WebRTC DataChannel (primary, UDP-like semantics).
+ * Channel for high-frequency game board-state communication.
+ * Currently backed by WebRTC DataChannel (unreliable, unordered SCTP
+ * over DTLS/UDP) for low-latency, UDP-like semantics.
  */
 export interface TransportChannel {
   /**
